@@ -36,7 +36,7 @@ const location = computed(() => {
 <template>
     <Head :title="lead.company_name" />
 
-    <div class="flex max-w-2xl flex-col gap-6 p-6">
+    <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 p-6">
         <div class="flex items-start justify-between gap-4">
             <Heading :title="lead.company_name" :description="lead.category ?? undefined" />
 
