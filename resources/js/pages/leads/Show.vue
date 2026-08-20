@@ -50,56 +50,56 @@ const location = computed(() => {
             </div>
         </div>
 
-        <div class="grid gap-2 rounded-xl border border-[#eef0f3] p-4 text-sm">
-            <div v-if="lead.phone" class="flex items-center gap-2 text-[#1c1c1e]">
-                <Phone class="size-4 text-[#6b6f7e]" />
+        <div class="grid gap-2 rounded-xl border border-border p-4 text-sm">
+            <div v-if="lead.phone" class="flex items-center gap-2 text-foreground">
+                <Phone class="size-4 text-muted-foreground" />
                 {{ lead.phone }}
             </div>
-            <div v-if="lead.email" class="flex items-center gap-2 text-[#1c1c1e]">
-                <Mail class="size-4 text-[#6b6f7e]" />
+            <div v-if="lead.email" class="flex items-center gap-2 text-foreground">
+                <Mail class="size-4 text-muted-foreground" />
                 {{ lead.email }}
             </div>
-            <div v-if="lead.website" class="flex items-center gap-2 text-[#1c1c1e]">
-                <Globe class="size-4 text-[#6b6f7e]" />
+            <div v-if="lead.website" class="flex items-center gap-2 text-foreground">
+                <Globe class="size-4 text-muted-foreground" />
                 {{ lead.website }}
             </div>
-            <div v-if="lead.instagram" class="flex items-center gap-2 text-[#1c1c1e]">
-                <AtSign class="size-4 text-[#6b6f7e]" />
+            <div v-if="lead.instagram" class="flex items-center gap-2 text-foreground">
+                <AtSign class="size-4 text-muted-foreground" />
                 {{ lead.instagram }}
             </div>
-            <div v-if="location" class="flex items-center gap-2 text-[#1c1c1e]">
-                <MapPin class="size-4 text-[#6b6f7e]" />
+            <div v-if="location" class="flex items-center gap-2 text-foreground">
+                <MapPin class="size-4 text-muted-foreground" />
                 {{ location }}
             </div>
         </div>
 
         <div class="space-y-2">
-            <h3 class="text-sm font-semibold text-[#6b6f7e] uppercase">
+            <h3 class="text-sm font-semibold text-muted-foreground uppercase">
                 Status
             </h3>
             <LeadStatusBadge :status="lead.status" />
         </div>
 
-        <div class="space-y-3 rounded-xl border border-[#eef0f3] p-4">
-            <h3 class="text-sm font-semibold text-[#6b6f7e] uppercase">
+        <div class="space-y-3 rounded-xl border border-border p-4">
+            <h3 class="text-sm font-semibold text-muted-foreground uppercase">
                 Presença digital
             </h3>
             <dl class="grid grid-cols-2 gap-y-2 text-sm">
-                <dt class="text-[#6b6f7e]">Site</dt>
+                <dt class="text-muted-foreground">Site</dt>
                 <dd>{{ lead.has_website ? 'Sim' : 'Não' }}</dd>
 
-                <dt class="text-[#6b6f7e]">Instagram</dt>
+                <dt class="text-muted-foreground">Instagram</dt>
                 <dd>{{ lead.has_instagram ? 'Sim' : 'Não' }}</dd>
 
-                <dt class="text-[#6b6f7e]">Score</dt>
+                <dt class="text-muted-foreground">Score</dt>
                 <dd>{{ lead.score ?? '—' }}</dd>
 
                 <template v-if="lead.rating">
-                    <dt class="text-[#6b6f7e]">Google</dt>
+                    <dt class="text-muted-foreground">Google</dt>
                     <dd class="flex items-center gap-1">
-                        <Star class="size-4 fill-[#fcb900] text-[#fcb900]" />
+                        <Star class="size-4 fill-yellow-500 text-yellow-500" />
                         {{ lead.rating }}
-                        <span v-if="lead.reviews_count" class="text-[#8e91a0]"
+                        <span v-if="lead.reviews_count" class="text-muted-foreground"
                             >({{ lead.reviews_count }} avaliações)</span
                         >
                     </dd>
@@ -108,11 +108,11 @@ const location = computed(() => {
         </div>
 
         <div class="space-y-2">
-            <h3 class="text-sm font-semibold text-[#6b6f7e] uppercase">
+            <h3 class="text-sm font-semibold text-muted-foreground uppercase">
                 Notas
             </h3>
             <div
-                class="min-h-16 rounded-xl border border-[#eef0f3] bg-[#fafbfc] p-4 text-sm whitespace-pre-wrap"
+                class="min-h-16 rounded-xl border border-border bg-muted/40 p-4 text-sm whitespace-pre-wrap"
             >
                 {{ lead.notes || 'Nenhuma nota registrada.' }}
             </div>

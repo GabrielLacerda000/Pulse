@@ -11,11 +11,11 @@ export const LEAD_STATUS_LABELS: Record<LeadStatus, string> = {
 };
 
 export const LEAD_STATUS_BADGE_CLASSES: Record<LeadStatus, string> = {
-    new: 'bg-[#fff8e0] text-[#746019]',
-    contacted: 'bg-[#f5f3ff] text-[#4262ff]',
-    conversation: 'bg-[#c3faf5] text-[#187574]',
-    meeting: 'bg-[#f5f3ff] text-[#2a41b6]',
-    proposal: 'bg-[#ffe6cd] text-[#1c1c1e]',
-    won: 'bg-[#00b473] text-white',
-    lost: 'bg-[#fbd4d4] text-[#600000]',
+    new: 'bg-status-new-bg text-status-new-fg',
+    contacted: 'bg-status-contacted-bg text-status-contacted-fg',
+    conversation: 'bg-status-conversation-bg text-status-conversation-fg',
+    meeting: 'bg-status-meeting-bg text-status-meeting-fg',
+    proposal: 'bg-status-proposal-bg text-status-proposal-fg',
+    won: 'bg-status-won-bg text-status-won-fg',
+    lost: 'bg-status-lost-bg text-status-lost-fg',
 };

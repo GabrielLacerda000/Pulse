@@ -41,11 +41,11 @@ defineOptions({
             </Button>
         </div>
 
-        <div class="overflow-x-auto rounded-xl border border-[#e0e2e8]">
+        <div class="overflow-x-auto rounded-xl border border-border">
             <table class="w-full text-left text-sm">
                 <thead>
                     <tr
-                        class="border-b border-[#e0e2e8] bg-[#f7f8fa] text-xs font-semibold tracking-wide text-[#6b6f7e] uppercase"
+                        class="border-b border-border bg-muted text-xs font-semibold tracking-wide text-muted-foreground uppercase"
                     >
                         <th class="px-4 py-3 font-semibold">Empresa</th>
                         <th class="px-4 py-3 font-semibold">Categoria</th>
@@ -60,7 +60,7 @@ defineOptions({
                 <tbody>
                     <tr
                         v-if="leads.length === 0"
-                        class="border-b border-[#eef0f3] last:border-b-0"
+                        class="border-b border-border/60 last:border-b-0"
                     >
                         <td
                             colspan="8"
@@ -72,24 +72,24 @@ defineOptions({
                     <tr
                         v-for="lead in leads"
                         :key="lead.id"
-                        class="border-b border-[#eef0f3] last:border-b-0"
+                        class="border-b border-border/60 last:border-b-0"
                     >
                         <td class="px-4 py-3 font-medium">
                             {{ lead.company_name }}
                         </td>
-                        <td class="px-4 py-3 text-[#555a6a]">
+                        <td class="px-4 py-3 text-muted-foreground">
                             {{ lead.category ?? '—' }}
                         </td>
-                        <td class="px-4 py-3 text-[#555a6a]">
+                        <td class="px-4 py-3 text-muted-foreground">
                             {{ lead.phone ?? '—' }}
                         </td>
-                        <td class="px-4 py-3 text-[#555a6a]">
+                        <td class="px-4 py-3 text-muted-foreground">
                             {{ lead.city ?? '—' }}
                         </td>
-                        <td class="px-4 py-3 text-[#555a6a]">
+                        <td class="px-4 py-3 text-muted-foreground">
                             {{ lead.score ?? '—' }}
                         </td>
-                        <td class="px-4 py-3 text-[#555a6a]">
+                        <td class="px-4 py-3 text-muted-foreground">
                             {{ lead.type ?? '—' }}
                         </td>
                         <td class="px-4 py-3">

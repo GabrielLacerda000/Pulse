@@ -59,6 +59,21 @@
     --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
+
+    --color-status-new-bg: var(--status-new-bg);
+    --color-status-new-fg: var(--status-new-fg);
+    --color-status-contacted-bg: var(--status-contacted-bg);
+    --color-status-contacted-fg: var(--status-contacted-fg);
+    --color-status-conversation-bg: var(--status-conversation-bg);
+    --color-status-conversation-fg: var(--status-conversation-fg);
+    --color-status-meeting-bg: var(--status-meeting-bg);
+    --color-status-meeting-fg: var(--status-meeting-fg);
+    --color-status-proposal-bg: var(--status-proposal-bg);
+    --color-status-proposal-fg: var(--status-proposal-fg);
+    --color-status-won-bg: var(--status-won-bg);
+    --color-status-won-fg: var(--status-won-fg);
+    --color-status-lost-bg: var(--status-lost-bg);
+    --color-status-lost-fg: var(--status-lost-fg);
 }
 
 /*
@@ -124,6 +139,21 @@
     --sidebar-border: hsl(0 0% 91%);
     --sidebar-ring: hsl(217.2 91.2% 59.8%);
     --sidebar: hsl(0 0% 98%);
+
+    --status-new-bg: hsl(48 100% 94%);
+    --status-new-fg: hsl(45 68% 26%);
+    --status-contacted-bg: hsl(252 100% 97%);
+    --status-contacted-fg: hsl(232 100% 61%);
+    --status-conversation-bg: hsl(177 90% 87%);
+    --status-conversation-fg: hsl(178 63% 28%);
+    --status-meeting-bg: hsl(252 100% 97%);
+    --status-meeting-fg: hsl(232 61% 43%);
+    --status-proposal-bg: hsl(30 100% 91%);
+    --status-proposal-fg: hsl(240 4% 11%);
+    --status-won-bg: hsl(157 100% 35%);
+    --status-won-fg: hsl(0 0% 100%);
+    --status-lost-bg: hsl(0 71% 92%);
+    --status-lost-fg: hsl(0 100% 19%);
 }
 
 .dark {
@@ -160,6 +190,21 @@
     --sidebar-border: hsl(0 0% 15.9%);
     --sidebar-ring: hsl(217.2 91.2% 59.8%);
     --sidebar: hsl(240 5.9% 10%);
+
+    --status-new-bg: hsl(45 40% 20%);
+    --status-new-fg: hsl(48 90% 80%);
+    --status-contacted-bg: hsl(240 30% 22%);
+    --status-contacted-fg: hsl(234 100% 82%);
+    --status-conversation-bg: hsl(178 40% 16%);
+    --status-conversation-fg: hsl(177 70% 72%);
+    --status-meeting-bg: hsl(240 30% 22%);
+    --status-meeting-fg: hsl(232 90% 78%);
+    --status-proposal-bg: hsl(30 30% 20%);
+    --status-proposal-fg: hsl(30 80% 82%);
+    --status-won-bg: hsl(157 60% 22%);
+    --status-won-fg: hsl(150 70% 80%);
+    --status-lost-bg: hsl(0 35% 22%);
+    --status-lost-fg: hsl(0 80% 82%);
 }
 
 @layer base {
