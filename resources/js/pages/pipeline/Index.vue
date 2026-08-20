@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { reactive } from 'vue';
+import { reactive, ref } from 'vue';
 import type { SortableEvent } from 'vue-draggable-plus';
 import Heading from '@/components/Heading.vue';
 import PipelineColumn from '@/components/pipeline/PipelineColumn.vue';
@@ -35,6 +35,39 @@ function groupLeadsByStatus(leads: Lead[]): Record<LeadStatus, Lead[]> {
 const leadsByStatus = reactive<Record<LeadStatus, Lead[]>>(
     groupLeadsByStatus(props.leads),
 );
+
+const scrollContainer = ref<HTMLElement | null>(null);
+const isDragScrolling = ref(false);
+let dragStartX = 0;
+let dragStartScrollLeft = 0;
+
+function startDragScroll(event: MouseEvent): void {
+    if (!scrollContainer.value || event.button !== 0) {
+        return;
+    }
+
+    if ((event.target as HTMLElement).closest('[data-lead-id]')) {
+        return;
+    }
+
+    isDragScrolling.value = true;
+    dragStartX = event.clientX;
+    dragStartScrollLeft = scrollContainer.value.scrollLeft;
+}
+
+function handleDragScroll(event: MouseEvent): void {
+    if (!isDragScrolling.value || !scrollContainer.value) {
+        return;
+    }
+
+    event.preventDefault();
+    scrollContainer.value.scrollLeft =
+        dragStartScrollLeft - (event.clientX - dragStartX);
+}
+
+function endDragScroll(): void {
+    isDragScrolling.value = false;
+}
 
 function handleLeadDropped(newStatus: LeadStatus, event: SortableEvent): void {
     const leadId = Number(event.item.dataset.leadId);
@@ -83,7 +116,17 @@ function handleLeadDropped(newStatus: LeadStatus, event: SortableEvent): void {
             description="Arraste os leads entre as etapas para atualizar o status comercial"
         />
 
-        <div class="flex gap-4 overflow-x-auto pb-2">
+        <div
+            ref="scrollContainer"
+            :class="[
+                'scrollbar-hide flex cursor-grab gap-4 overflow-x-auto pb-2',
+                isDragScrolling && 'cursor-grabbing select-none',
+            ]"
+            @mousedown="startDragScroll"
+            @mousemove="handleDragScroll"
+            @mouseup="endDragScroll"
+            @mouseleave="endDragScroll"
+        >
             <PipelineColumn
                 v-for="status in LEAD_STATUS_ORDER"
                 :key="status"
