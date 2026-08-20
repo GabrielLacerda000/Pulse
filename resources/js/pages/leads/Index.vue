@@ -26,7 +26,7 @@ defineOptions({
 <template>
     <Head title="Leads" />
 
-    <div class="flex flex-col gap-6">
+    <div class="flex flex-col gap-6 p-6">
         <div class="flex items-center justify-between">
             <Heading
                 title="Leads"

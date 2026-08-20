@@ -25,7 +25,7 @@ defineOptions({
 <template>
     <Head :title="`Editar ${lead.company_name}`" />
 
-    <div class="flex max-w-xl flex-col gap-6">
+    <div class="mx-auto flex w-full max-w-xl flex-col gap-6 p-6">
         <Heading
             title="Editar lead"
             :description="`Atualize os dados de ${lead.company_name}`"

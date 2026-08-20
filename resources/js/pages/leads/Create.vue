@@ -20,7 +20,7 @@ defineOptions({
 <template>
     <Head title="Novo lead" />
 
-    <div class="flex max-w-xl flex-col gap-6">
+    <div class="mx-auto flex w-full max-w-xl flex-col gap-6 p-6">
         <Heading
             title="Novo lead"
             description="Cadastre um lead manualmente. O status inicial será Novo."
