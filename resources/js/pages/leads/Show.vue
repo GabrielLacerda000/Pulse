@@ -6,6 +6,7 @@ import Heading from '@/components/Heading.vue';
 import LeadDeleteDialog from '@/components/leads/LeadDeleteDialog.vue';
 import LeadNotesForm from '@/components/leads/LeadNotesForm.vue';
 import LeadStatusBadge from '@/components/leads/LeadStatusBadge.vue';
+import LeadWhatsAppButton from '@/components/leads/LeadWhatsAppButton.vue';
 import { Button } from '@/components/ui/button';
 import { dashboard } from '@/routes';
 import { edit as editLead, index } from '@/routes/leads';
@@ -41,6 +42,7 @@ const location = computed(() => {
             <Heading :title="lead.company_name" :description="lead.category ?? undefined" />
 
             <div class="flex shrink-0 items-center gap-1">
+                <LeadWhatsAppButton :whatsapp-phone="lead.whatsapp_phone" />
                 <Button as-child variant="outline" class="rounded-full">
                     <Link :href="editLead(lead.id)">
                         <Pencil class="size-4" />

@@ -4,6 +4,7 @@ import { Eye, Pencil, Plus } from '@lucide/vue';
 import Heading from '@/components/Heading.vue';
 import LeadDeleteDialog from '@/components/leads/LeadDeleteDialog.vue';
 import LeadStatusBadge from '@/components/leads/LeadStatusBadge.vue';
+import LeadWhatsAppButton from '@/components/leads/LeadWhatsAppButton.vue';
 import { Button } from '@/components/ui/button';
 import { dashboard } from '@/routes';
 import { create, edit as editLead, index, show } from '@/routes/leads';
@@ -97,6 +98,10 @@ defineOptions({
                         </td>
                         <td class="px-4 py-3">
                             <div class="flex items-center gap-1">
+                                <LeadWhatsAppButton
+                                    :whatsapp-phone="lead.whatsapp_phone"
+                                    icon-only
+                                />
                                 <Button
                                     as-child
                                     variant="ghost"

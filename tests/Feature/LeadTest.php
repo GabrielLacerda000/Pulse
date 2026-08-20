@@ -27,6 +27,26 @@ describe('as an authenticated user', function () {
         );
     });
 
+    test('leads index exposes the normalized whatsapp phone for a lead with a valid phone', function () {
+        Lead::factory()->create(['phone' => '(81) 3482-7554']);
+
+        $response = $this->get(route('leads.index'));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('leads.0.whatsapp_phone', '558134827554')
+        );
+    });
+
+    test('leads index exposes no whatsapp phone for a lead without a phone', function () {
+        Lead::factory()->create(['phone' => null]);
+
+        $response = $this->get(route('leads.index'));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('leads.0.whatsapp_phone', null)
+        );
+    });
+
     test('a lead can be created manually with default status new', function () {
         $data = [
             'company_name' => 'Clínica Exemplo',
@@ -68,6 +88,26 @@ describe('as an authenticated user', function () {
         $response->assertInertia(fn ($page) => $page
             ->component('leads/Show')
             ->where('lead.id', $lead->id)
+        );
+    });
+
+    test('a lead with a valid phone exposes a normalized whatsapp phone', function () {
+        $lead = Lead::factory()->create(['phone' => '(81) 3482-7554']);
+
+        $response = $this->get(route('leads.show', $lead));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('lead.whatsapp_phone', '558134827554')
+        );
+    });
+
+    test('a lead without a phone exposes no whatsapp phone', function () {
+        $lead = Lead::factory()->create(['phone' => null]);
+
+        $response = $this->get(route('leads.show', $lead));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('lead.whatsapp_phone', null)
         );
     });
 

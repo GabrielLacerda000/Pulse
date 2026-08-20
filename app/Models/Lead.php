@@ -2,8 +2,10 @@
 
 namespace App\Models;
 
+use App\Actions\NormalizePhoneAction;
 use App\Enums\LeadStatus;
 use Database\Factories\LeadFactory;
+use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -11,6 +13,10 @@ class Lead extends Model
 {
     /** @use HasFactory<LeadFactory> */
     use HasFactory;
+
+    protected $appends = [
+        'whatsapp_phone',
+    ];
 
     protected $fillable = [
         'company_name',
@@ -45,5 +51,16 @@ class Lead extends Model
             'reviews_count' => 'integer',
             'source_created_at' => 'datetime',
         ];
+    }
+
+    /**
+     * The lead's phone normalized for the wa.me WhatsApp link, or null
+     * when the lead has no phone or it fails normalization.
+     */
+    protected function whatsappPhone(): Attribute
+    {
+        return Attribute::make(
+            get: fn (): ?string => (new NormalizePhoneAction)->execute($this->phone),
+        );
     }
 }
