@@ -1,9 +1,13 @@
 <script setup lang="ts">
+import { vMaska } from 'maska/vue';
 import InputError from '@/components/InputError.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
+import { usePhoneMask } from '@/composables/usePhoneMask';
 import type { Lead } from '@/types';
+
+const { phoneMaskOptions, formatPhoneDisplay } = usePhoneMask();
 
 type Errors = Partial<
     Record<
@@ -62,7 +66,8 @@ withDefaults(
             <Input
                 id="phone"
                 name="phone"
-                :default-value="lead.phone ?? ''"
+                v-maska="phoneMaskOptions"
+                :default-value="formatPhoneDisplay(lead.phone)"
                 placeholder="(81) 99999-9999"
             />
             <InputError :message="errors.phone" />

@@ -6,6 +6,7 @@ import LeadDeleteDialog from '@/components/leads/LeadDeleteDialog.vue';
 import LeadStatusBadge from '@/components/leads/LeadStatusBadge.vue';
 import LeadWhatsAppButton from '@/components/leads/LeadWhatsAppButton.vue';
 import { Button } from '@/components/ui/button';
+import { usePhoneMask } from '@/composables/usePhoneMask';
 import { dashboard } from '@/routes';
 import { create, edit as editLead, index, show } from '@/routes/leads';
 import type { Lead } from '@/types';
@@ -13,6 +14,8 @@ import type { Lead } from '@/types';
 defineProps<{
     leads: Lead[];
 }>();
+
+const { formatPhoneDisplay } = usePhoneMask();
 
 defineOptions({
     layout: {
@@ -82,7 +85,11 @@ defineOptions({
                             {{ lead.category ?? '—' }}
                         </td>
                         <td class="px-4 py-3 text-muted-foreground">
-                            {{ lead.phone ?? '—' }}
+                            {{
+                                lead.phone
+                                    ? formatPhoneDisplay(lead.phone)
+                                    : '—'
+                            }}
                         </td>
                         <td class="px-4 py-3 text-muted-foreground">
                             {{ lead.city ?? '—' }}

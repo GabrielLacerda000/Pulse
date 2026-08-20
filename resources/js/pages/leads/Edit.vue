@@ -3,6 +3,7 @@ import { Form, Head, Link } from '@inertiajs/vue3';
 import Heading from '@/components/Heading.vue';
 import LeadFormFields from '@/components/leads/LeadFormFields.vue';
 import { Button } from '@/components/ui/button';
+import { usePhoneMask } from '@/composables/usePhoneMask';
 import { dashboard } from '@/routes';
 import { index, show, update } from '@/routes/leads';
 import type { Lead } from '@/types';
@@ -10,6 +11,8 @@ import type { Lead } from '@/types';
 defineProps<{
     lead: Lead;
 }>();
+
+const { stripPhoneDigits } = usePhoneMask();
 
 defineOptions({
     layout: {
@@ -33,13 +36,23 @@ defineOptions({
 
         <Form
             v-bind="update.form(lead.id)"
+            :transform="
+                (data) => ({
+                    ...data,
+                    phone: stripPhoneDigits(data.phone as string),
+                })
+            "
             class="space-y-6"
             v-slot="{ errors, processing }"
         >
             <LeadFormFields :lead="lead" :errors="errors" />
 
             <div class="flex items-center gap-3">
-                <Button type="submit" :disabled="processing" class="rounded-full">
+                <Button
+                    type="submit"
+                    :disabled="processing"
+                    class="rounded-full"
+                >
                     Salvar alterações
                 </Button>
                 <Button as-child variant="secondary" class="rounded-full">
