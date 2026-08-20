@@ -64,7 +64,14 @@ const location = computed(() => {
             </div>
             <div v-if="lead.website" class="flex items-center gap-2 text-foreground">
                 <Globe class="size-4 text-muted-foreground" />
-                {{ lead.website }}
+                <a
+                    :href="lead.website"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="truncate text-primary underline-offset-4 hover:underline"
+                >
+                    {{ lead.website }}
+                </a>
             </div>
             <div v-if="lead.instagram" class="flex items-center gap-2 text-foreground">
                 <AtSign class="size-4 text-muted-foreground" />
