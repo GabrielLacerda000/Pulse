@@ -146,8 +146,8 @@
     --status-contacted-fg: hsl(232 100% 61%);
     --status-conversation-bg: hsl(177 90% 87%);
     --status-conversation-fg: hsl(178 63% 28%);
-    --status-meeting-bg: hsl(252 100% 97%);
-    --status-meeting-fg: hsl(232 61% 43%);
+    --status-meeting-bg: hsl(280 100% 95%);
+    --status-meeting-fg: hsl(271 60% 42%);
     --status-proposal-bg: hsl(30 100% 91%);
     --status-proposal-fg: hsl(240 4% 11%);
     --status-won-bg: hsl(157 100% 35%);
@@ -197,8 +197,8 @@
     --status-contacted-fg: hsl(234 100% 82%);
     --status-conversation-bg: hsl(178 40% 16%);
     --status-conversation-fg: hsl(177 70% 72%);
-    --status-meeting-bg: hsl(240 30% 22%);
-    --status-meeting-fg: hsl(232 90% 78%);
+    --status-meeting-bg: hsl(271 35% 22%);
+    --status-meeting-fg: hsl(271 80% 82%);
     --status-proposal-bg: hsl(30 30% 20%);
     --status-proposal-fg: hsl(30 80% 82%);
     --status-won-bg: hsl(157 60% 22%);
