@@ -168,6 +168,28 @@ describe('as an authenticated user', function () {
         $response->assertSessionDoesntHaveErrors();
     });
 
+    test('a lead status can be updated', function () {
+        $lead = Lead::factory()->create(['status' => LeadStatus::NEW]);
+
+        $response = $this->patch(route('leads.status.update', $lead), [
+            'status' => LeadStatus::MEETING->value,
+        ]);
+
+        $response->assertRedirect();
+        expect($lead->fresh()->status)->toBe(LeadStatus::MEETING);
+    });
+
+    test('updating a lead status requires a valid enum value', function () {
+        $lead = Lead::factory()->create(['status' => LeadStatus::NEW]);
+
+        $response = $this->patch(route('leads.status.update', $lead), [
+            'status' => 'not-a-real-status',
+        ]);
+
+        $response->assertSessionHasErrors('status');
+        expect($lead->fresh()->status)->toBe(LeadStatus::NEW);
+    });
+
     test('a lead can be deleted', function () {
         $lead = Lead::factory()->create();
 

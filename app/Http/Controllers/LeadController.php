@@ -3,10 +3,13 @@
 namespace App\Http\Controllers;
 
 use App\Actions\CreateLeadAction;
+use App\Actions\UpdateLeadStatusAction;
 use App\Data\LeadData;
+use App\Enums\LeadStatus;
 use App\Http\Requests\StoreLeadRequest;
 use App\Http\Requests\UpdateLeadNotesRequest;
 use App\Http\Requests\UpdateLeadRequest;
+use App\Http\Requests\UpdateLeadStatusRequest;
 use App\Models\Lead;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -84,6 +87,16 @@ class LeadController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Notes updated.')]);
 
         return to_route('leads.show', $lead);
+    }
+
+    /**
+     * Update the status of the specified lead (Kanban drag & drop).
+     */
+    public function updateStatus(UpdateLeadStatusRequest $request, Lead $lead, UpdateLeadStatusAction $action): RedirectResponse
+    {
+        $action->execute($lead, LeadStatus::from($request->validated('status')));
+
+        return back();
     }
 
     /**

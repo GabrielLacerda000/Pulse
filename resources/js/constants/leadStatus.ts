@@ -1,5 +1,15 @@
 import type { LeadStatus } from '@/types';
 
+export const LEAD_STATUS_ORDER: LeadStatus[] = [
+    'new',
+    'contacted',
+    'conversation',
+    'meeting',
+    'proposal',
+    'won',
+    'lost',
+];
+
 export const LEAD_STATUS_LABELS: Record<LeadStatus, string> = {
     new: 'Novo',
     contacted: 'Contatado',
