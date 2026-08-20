@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\CreateLeadAction;
+use App\Data\LeadData;
 use App\Http\Requests\StoreLeadRequest;
 use App\Http\Requests\UpdateLeadRequest;
 use App\Models\Lead;
@@ -37,7 +38,7 @@ class LeadController extends Controller
      */
     public function store(StoreLeadRequest $request, CreateLeadAction $action): RedirectResponse
     {
-        $lead = $action->execute($request->validated());
+        $lead = $action->execute(LeadData::from($request->validated()));
 
         return to_route('leads.show', $lead);
     }
