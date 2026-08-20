@@ -5,7 +5,7 @@ namespace App\Actions;
 use App\Enums\LeadStatus;
 use App\Models\Lead;
 
-final class F
+final class CreateLeadAction
 {
     /**
      * @param  array<string, mixed>  $data
