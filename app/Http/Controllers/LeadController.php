@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Actions\CreateLeadAction;
 use App\Data\LeadData;
 use App\Http\Requests\StoreLeadRequest;
+use App\Http\Requests\UpdateLeadNotesRequest;
 use App\Http\Requests\UpdateLeadRequest;
 use App\Models\Lead;
 use Illuminate\Http\RedirectResponse;
@@ -69,6 +70,18 @@ class LeadController extends Controller
     public function update(UpdateLeadRequest $request, Lead $lead): RedirectResponse
     {
         $lead->update($request->validated());
+
+        return to_route('leads.show', $lead);
+    }
+
+    /**
+     * Update the notes of the specified lead.
+     */
+    public function updateNotes(UpdateLeadNotesRequest $request, Lead $lead): RedirectResponse
+    {
+        $lead->update($request->validated());
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Notes updated.')]);
 
         return to_route('leads.show', $lead);
     }

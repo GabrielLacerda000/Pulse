@@ -4,6 +4,7 @@ import { AtSign, Globe, Mail, MapPin, Pencil, Phone, Star } from '@lucide/vue';
 import { computed } from 'vue';
 import Heading from '@/components/Heading.vue';
 import LeadDeleteDialog from '@/components/leads/LeadDeleteDialog.vue';
+import LeadNotesForm from '@/components/leads/LeadNotesForm.vue';
 import LeadStatusBadge from '@/components/leads/LeadStatusBadge.vue';
 import { Button } from '@/components/ui/button';
 import { dashboard } from '@/routes';
@@ -111,11 +112,7 @@ const location = computed(() => {
             <h3 class="text-sm font-semibold text-muted-foreground uppercase">
                 Notas
             </h3>
-            <div
-                class="min-h-16 rounded-xl border border-border bg-muted/40 p-4 text-sm whitespace-pre-wrap"
-            >
-                {{ lead.notes || 'Nenhuma nota registrada.' }}
-            </div>
+            <LeadNotesForm :lead="lead" />
         </div>
     </div>
 </template>

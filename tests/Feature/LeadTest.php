@@ -92,6 +92,42 @@ describe('as an authenticated user', function () {
         expect($lead->fresh()->notes)->toBe('Updated notes');
     });
 
+    test('notes can be added to a lead with no notes', function () {
+        $lead = Lead::factory()->create(['notes' => null]);
+
+        $response = $this->patch(route('leads.notes.update', $lead), [
+            'notes' => 'First contact went well.',
+        ]);
+
+        $response->assertRedirect();
+        expect($lead->fresh()->notes)->toBe('First contact went well.');
+    });
+
+    test('existing notes can be edited independently of the lead edit form', function () {
+        $lead = Lead::factory()->create([
+            'company_name' => 'Untouched Company',
+            'notes' => 'Old note.',
+        ]);
+
+        $response = $this->patch(route('leads.notes.update', $lead), [
+            'notes' => 'Updated note.',
+        ]);
+
+        $response->assertRedirect();
+        expect($lead->fresh()->notes)->toBe('Updated note.');
+        expect($lead->fresh()->company_name)->toBe('Untouched Company');
+    });
+
+    test('updating notes does not require the lead other fields', function () {
+        $lead = Lead::factory()->create();
+
+        $response = $this->patch(route('leads.notes.update', $lead), [
+            'notes' => 'Standalone note update.',
+        ]);
+
+        $response->assertSessionDoesntHaveErrors();
+    });
+
     test('a lead can be deleted', function () {
         $lead = Lead::factory()->create();
 
