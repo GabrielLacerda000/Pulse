@@ -1,7 +1,9 @@
 <script setup lang="ts">
+import { ref } from 'vue';
 import type { SortableEvent } from 'vue-draggable-plus';
 import { VueDraggable } from 'vue-draggable-plus';
 import PipelineLeadCard from '@/components/pipeline/PipelineLeadCard.vue';
+import { Button } from '@/components/ui/button';
 import {
     LEAD_STATUS_BADGE_CLASSES,
     LEAD_STATUS_LABELS,
@@ -17,6 +19,11 @@ const emit = defineEmits<{
     'update:modelValue': [leads: Lead[]];
     leadDropped: [event: SortableEvent];
 }>();
+
+const INITIAL_VISIBLE = 15;
+const CARD_HEIGHT_PX = 96;
+
+const expanded = ref(false);
 </script>
 
 <template>
@@ -39,22 +46,31 @@ const emit = defineEmits<{
             </span>
         </div>
 
-        <VueDraggable
-            :model-value="modelValue"
-            :animation="150"
-            group="pipeline-leads"
-            ghost-class="opacity-40"
-            class="flex min-h-16 flex-col gap-2"
-            @update:model-value="emit('update:modelValue', $event as Lead[])"
-            @add="emit('leadDropped', $event)"
+        <div
+            :style="
+                !expanded && modelValue.length > INITIAL_VISIBLE
+                    ? { maxHeight: `${INITIAL_VISIBLE * CARD_HEIGHT_PX}px` }
+                    : undefined
+            "
+            class="overflow-hidden"
         >
-            <PipelineLeadCard
-                v-for="lead in modelValue"
-                :key="lead.id"
-                :data-lead-id="lead.id"
-                :lead="lead"
-            />
-        </VueDraggable>
+            <VueDraggable
+                :model-value="modelValue"
+                :animation="150"
+                group="pipeline-leads"
+                ghost-class="opacity-40"
+                class="flex min-h-16 flex-col gap-2"
+                @update:model-value="emit('update:modelValue', $event as Lead[])"
+                @add="emit('leadDropped', $event)"
+            >
+                <PipelineLeadCard
+                    v-for="lead in modelValue"
+                    :key="lead.id"
+                    :data-lead-id="lead.id"
+                    :lead="lead"
+                />
+            </VueDraggable>
+        </div>
 
         <p
             v-if="modelValue.length === 0"
@@ -62,5 +78,15 @@ const emit = defineEmits<{
         >
             Nenhum lead nesta etapa.
         </p>
+
+        <Button
+            v-if="!expanded && modelValue.length > INITIAL_VISIBLE"
+            variant="ghost"
+            size="sm"
+            class="rounded-full text-muted-foreground"
+            @click="expanded = true"
+        >
+            Carregar mais ({{ modelValue.length - INITIAL_VISIBLE }})
+        </Button>
     </div>
 </template>

@@ -10,7 +10,13 @@ function toQueryParams(filters: LeadFilters): Record<string, string> {
     ) as Record<string, string>;
 }
 
-export function useLeadFilters(initialFilters: LeadFilters) {
+export function useLeadFilters(
+    initialFilters: LeadFilters,
+    options?: { url?: string; only?: string[] },
+) {
+    const url = options?.url ?? index.url();
+    const only = options?.only ?? ['leads', 'filters'];
+
     const filters = reactive<LeadFilters>({
         search: initialFilters.search ?? '',
         status: initialFilters.status ?? '',
@@ -21,11 +27,11 @@ export function useLeadFilters(initialFilters: LeadFilters) {
     });
 
     function applyFilters() {
-        router.get(index.url(), toQueryParams(filters), {
+        router.get(url, toQueryParams(filters), {
             preserveState: true,
             preserveScroll: true,
             replace: true,
-            only: ['leads', 'filters'],
+            only,
         });
     }
 
@@ -54,13 +60,13 @@ export function useLeadFilters(initialFilters: LeadFilters) {
 
     function goToPage(page: number) {
         router.get(
-            index.url(),
+            url,
             { ...toQueryParams(filters), page },
             {
                 preserveState: true,
                 preserveScroll: true,
                 replace: true,
-                only: ['leads', 'filters'],
+                only,
             },
         );
     }

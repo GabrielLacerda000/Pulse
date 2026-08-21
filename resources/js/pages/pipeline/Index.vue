@@ -1,18 +1,27 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { reactive, ref } from 'vue';
+import { reactive, ref, watch } from 'vue';
 import type { SortableEvent } from 'vue-draggable-plus';
 import Heading from '@/components/Heading.vue';
+import LeadsFilterBar from '@/components/leads/LeadsFilterBar.vue';
 import PipelineColumn from '@/components/pipeline/PipelineColumn.vue';
+import { useLeadFilters } from '@/composables/useLeadFilters';
 import { LEAD_STATUS_ORDER } from '@/constants/leadStatus';
 import { dashboard } from '@/routes';
 import { update as updateLeadStatus } from '@/routes/leads/status';
 import { index as pipelineIndex } from '@/routes/pipeline';
-import type { Lead, LeadStatus } from '@/types';
+import type { Lead, LeadFilterOptions, LeadFilters, LeadStatus } from '@/types';
 
 const props = defineProps<{
     leads: Lead[];
+    filters: LeadFilters;
+    filterOptions: LeadFilterOptions;
 }>();
+
+const { filters } = useLeadFilters(props.filters, {
+    url: pipelineIndex().url,
+    only: ['leads', 'filters'],
+});
 
 defineOptions({
     layout: {
@@ -34,6 +43,13 @@ function groupLeadsByStatus(leads: Lead[]): Record<LeadStatus, Lead[]> {
 
 const leadsByStatus = reactive<Record<LeadStatus, Lead[]>>(
     groupLeadsByStatus(props.leads),
+);
+
+watch(
+    () => props.leads,
+    (leads) => {
+        Object.assign(leadsByStatus, groupLeadsByStatus(leads));
+    },
 );
 
 const scrollContainer = ref<HTMLElement | null>(null);
@@ -114,6 +130,14 @@ function handleLeadDropped(newStatus: LeadStatus, event: SortableEvent): void {
         <Heading
             title="Pipeline"
             description="Arraste os leads entre as etapas para atualizar o status comercial"
+        />
+
+        <LeadsFilterBar
+            v-model:search="filters.search"
+            v-model:status="filters.status"
+            v-model:category="filters.category"
+            v-model:city="filters.city"
+            :filter-options="filterOptions"
         />
 
         <div

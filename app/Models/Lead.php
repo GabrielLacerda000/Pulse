@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 class Lead extends Model
 {
@@ -125,5 +126,19 @@ class Lead extends Model
         }
 
         return $query->orderBy($sort, $direction === 'asc' ? 'asc' : 'desc');
+    }
+
+    /**
+     * The distinct filter option values available across all leads.
+     *
+     * @return array{statuses: array<LeadStatus>, categories: Collection<int, string>, cities: Collection<int, string>}
+     */
+    public static function filterOptions(): array
+    {
+        return [
+            'statuses' => LeadStatus::cases(),
+            'categories' => static::query()->whereNotNull('category')->distinct()->orderBy('category')->pluck('category'),
+            'cities' => static::query()->whereNotNull('city')->distinct()->orderBy('city')->pluck('city'),
+        ];
     }
 }

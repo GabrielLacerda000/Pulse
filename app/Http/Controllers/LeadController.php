@@ -34,11 +34,7 @@ class LeadController extends Controller
                 ->sortBy($filters['sort'] ?? null, $filters['direction'] ?? null)
                 ->paginate(15),
             'filters' => $filters,
-            'filterOptions' => [
-                'statuses' => LeadStatus::cases(),
-                'categories' => Lead::query()->whereNotNull('category')->distinct()->orderBy('category')->pluck('category'),
-                'cities' => Lead::query()->whereNotNull('city')->distinct()->orderBy('city')->pluck('city'),
-            ],
+            'filterOptions' => Lead::filterOptions(),
         ]);
     }
 
