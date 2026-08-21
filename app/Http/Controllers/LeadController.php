@@ -12,6 +12,7 @@ use App\Http\Requests\UpdateLeadRequest;
 use App\Http\Requests\UpdateLeadStatusRequest;
 use App\Models\Lead;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -20,12 +21,24 @@ class LeadController extends Controller
     /**
      * Display a listing of the leads.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $filters = $request->only(['search', 'status', 'category', 'city', 'sort', 'direction']);
+
         return Inertia::render('leads/Index', [
             'leads' => Lead::query()
-                ->latest()
+                ->search($filters['search'] ?? null)
+                ->filterStatus($filters['status'] ?? null)
+                ->filterCategory($filters['category'] ?? null)
+                ->filterCity($filters['city'] ?? null)
+                ->sortBy($filters['sort'] ?? null, $filters['direction'] ?? null)
                 ->get(),
+            'filters' => $filters,
+            'filterOptions' => [
+                'statuses' => LeadStatus::cases(),
+                'categories' => Lead::query()->whereNotNull('category')->distinct()->orderBy('category')->pluck('category'),
+                'cities' => Lead::query()->whereNotNull('city')->distinct()->orderBy('city')->pluck('city'),
+            ],
         ]);
     }
 

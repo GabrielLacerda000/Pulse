@@ -32,3 +32,20 @@ export type Lead = {
     created_at: string;
     updated_at: string;
 };
+
+export type LeadSortColumn = 'company_name' | 'score' | 'status';
+
+export type LeadFilters = {
+    search?: string;
+    status?: LeadStatus | '';
+    category?: string;
+    city?: string;
+    sort?: LeadSortColumn | '';
+    direction?: 'asc' | 'desc' | '';
+};
+
+export type LeadFilterOptions = {
+    statuses: LeadStatus[];
+    categories: string[];
+    cities: string[];
+};

@@ -119,7 +119,7 @@ describe('as an authenticated user', function () {
             'category' => $lead->category,
             'phone' => $lead->phone,
             'email' => $lead->email,
-            'website' => 'https://' . fake()->domainName(),
+            'website' => 'https://'.fake()->domainName(),
             'instagram' => $lead->instagram,
             'city' => $lead->city,
             'state' => $lead->state,
@@ -188,6 +188,90 @@ describe('as an authenticated user', function () {
 
         $response->assertSessionHasErrors('status');
         expect($lead->fresh()->status)->toBe(LeadStatus::NEW);
+    });
+
+    test('leads index can be searched by company name', function () {
+        Lead::factory()->create(['company_name' => 'Clínica Sorriso']);
+        Lead::factory()->create(['company_name' => 'Restaurante Sabor']);
+
+        $response = $this->get(route('leads.index', ['search' => 'Sorriso']));
+
+        $response->assertInertia(fn ($page) => $page
+            ->has('leads', 1)
+            ->where('leads.0.company_name', 'Clínica Sorriso')
+        );
+    });
+
+    test('leads index can be filtered by status', function () {
+        Lead::factory()->create(['status' => LeadStatus::NEW]);
+        Lead::factory()->create(['status' => LeadStatus::WON]);
+
+        $response = $this->get(route('leads.index', ['status' => LeadStatus::WON->value]));
+
+        $response->assertInertia(fn ($page) => $page
+            ->has('leads', 1)
+            ->where('leads.0.status', LeadStatus::WON->value)
+        );
+    });
+
+    test('leads index can be filtered by category', function () {
+        Lead::factory()->create(['category' => 'Restaurante']);
+        Lead::factory()->create(['category' => 'Advocacia']);
+
+        $response = $this->get(route('leads.index', ['category' => 'Advocacia']));
+
+        $response->assertInertia(fn ($page) => $page
+            ->has('leads', 1)
+            ->where('leads.0.category', 'Advocacia')
+        );
+    });
+
+    test('leads index can be filtered by city', function () {
+        Lead::factory()->create(['city' => 'Recife']);
+        Lead::factory()->create(['city' => 'Olinda']);
+
+        $response = $this->get(route('leads.index', ['city' => 'Olinda']));
+
+        $response->assertInertia(fn ($page) => $page
+            ->has('leads', 1)
+            ->where('leads.0.city', 'Olinda')
+        );
+    });
+
+    test('leads index can be sorted by score ascending', function () {
+        Lead::factory()->create(['company_name' => 'Baixo Score', 'score' => 10]);
+        Lead::factory()->create(['company_name' => 'Alto Score', 'score' => 90]);
+
+        $response = $this->get(route('leads.index', ['sort' => 'score', 'direction' => 'asc']));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('leads.0.company_name', 'Baixo Score')
+            ->where('leads.1.company_name', 'Alto Score')
+        );
+    });
+
+    test('leads index can be sorted by company name descending', function () {
+        Lead::factory()->create(['company_name' => 'Alfa']);
+        Lead::factory()->create(['company_name' => 'Zeta']);
+
+        $response = $this->get(route('leads.index', ['sort' => 'company_name', 'direction' => 'desc']));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('leads.0.company_name', 'Zeta')
+            ->where('leads.1.company_name', 'Alfa')
+        );
+    });
+
+    test('leads index ignores an invalid sort column', function () {
+        Lead::factory()->create(['company_name' => 'Older Lead', 'created_at' => now()->subDay()]);
+        Lead::factory()->create(['company_name' => 'Newer Lead', 'created_at' => now()]);
+
+        $response = $this->get(route('leads.index', ['sort' => 'notes']));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->where('leads.0.company_name', 'Newer Lead')
+        );
     });
 
     test('a lead can be deleted', function () {

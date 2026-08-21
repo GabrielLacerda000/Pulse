@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Actions\NormalizePhoneAction;
 use App\Enums\LeadStatus;
 use Database\Factories\LeadFactory;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -62,5 +63,67 @@ class Lead extends Model
         return Attribute::make(
             get: fn (): ?string => (new NormalizePhoneAction)->execute($this->phone),
         );
+    }
+
+    /**
+     * Filter leads by free text matching the company name.
+     */
+    public function scopeSearch(Builder $query, ?string $search): Builder
+    {
+        if (! $search) {
+            return $query;
+        }
+
+        return $query->where('company_name', 'like', '%'.$search.'%');
+    }
+
+    /**
+     * Filter leads by status.
+     */
+    public function scopeFilterStatus(Builder $query, ?string $status): Builder
+    {
+        if (! $status) {
+            return $query;
+        }
+
+        return $query->where('status', $status);
+    }
+
+    /**
+     * Filter leads by category.
+     */
+    public function scopeFilterCategory(Builder $query, ?string $category): Builder
+    {
+        if (! $category) {
+            return $query;
+        }
+
+        return $query->where('category', $category);
+    }
+
+    /**
+     * Filter leads by city.
+     */
+    public function scopeFilterCity(Builder $query, ?string $city): Builder
+    {
+        if (! $city) {
+            return $query;
+        }
+
+        return $query->where('city', $city);
+    }
+
+    /**
+     * Sort leads by an allowed column, defaulting to most recent first.
+     */
+    public function scopeSortBy(Builder $query, ?string $sort, ?string $direction): Builder
+    {
+        $sortable = ['company_name', 'score', 'status'];
+
+        if (! in_array($sort, $sortable, true)) {
+            return $query->latest();
+        }
+
+        return $query->orderBy($sort, $direction === 'asc' ? 'asc' : 'desc');
     }
 }
