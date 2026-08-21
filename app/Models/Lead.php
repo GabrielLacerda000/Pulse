@@ -4,17 +4,31 @@ namespace App\Models;
 
 use App\Actions\NormalizePhoneAction;
 use App\Enums\LeadStatus;
+use App\Models\Scopes\LeadOwnerScope;
 use Database\Factories\LeadFactory;
+use Illuminate\Database\Eloquent\Attributes\ScopedBy;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Casts\Attribute;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
+#[ScopedBy([LeadOwnerScope::class])]
 class Lead extends Model
 {
     /** @use HasFactory<LeadFactory> */
     use HasFactory;
+
+    /**
+     * The "booted" method of the model.
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (Lead $lead): void {
+            $lead->user_id ??= Auth::id();
+        });
+    }
 
     protected $appends = [
         'whatsapp_phone',

@@ -318,4 +318,33 @@ describe('as an authenticated user', function () {
         $response->assertRedirect(route('leads.index'));
         expect(Lead::find($lead->id))->toBeNull();
     });
+
+    test('leads index does not list leads belonging to another user', function () {
+        Lead::factory()->count(2)->create(['user_id' => User::factory()->create()->id]);
+        Lead::factory()->create();
+
+        $response = $this->get(route('leads.index'));
+
+        $response->assertInertia(fn ($page) => $page->has('leads.data', 1));
+    });
+
+    test('a lead belonging to another user returns 404', function () {
+        $lead = Lead::factory()->create(['user_id' => User::factory()->create()->id]);
+
+        $response = $this->get(route('leads.show', $lead));
+
+        $response->assertNotFound();
+    });
+
+    test('a lead created manually is owned by the acting user', function () {
+        $data = [
+            'company_name' => 'Clínica Exemplo',
+        ];
+
+        $this->post(route('leads.store'), $data);
+
+        $lead = Lead::firstWhere('company_name', 'Clínica Exemplo');
+
+        expect($lead->user_id)->toBe(auth()->id());
+    });
 });

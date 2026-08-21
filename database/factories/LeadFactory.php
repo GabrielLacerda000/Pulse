@@ -4,7 +4,9 @@ namespace Database\Factories;
 
 use App\Enums\LeadStatus;
 use App\Models\Lead;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Illuminate\Support\Facades\Auth;
 
 /**
  * @extends Factory<Lead>
@@ -19,6 +21,7 @@ class LeadFactory extends Factory
     public function definition(): array
     {
         return [
+            'user_id' => fn (): int => Auth::id() ?? User::factory()->create()->id,
             'company_name' => $this->faker->company(),
             'category' => $this->faker->randomElement(['Clínica odontológica', 'Restaurante', 'Salão de beleza', 'Loja de roupas', 'Advocacia']),
             'phone' => $this->faker->numerify('55##9########'),

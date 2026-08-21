@@ -85,4 +85,13 @@ describe('as an authenticated user', function () {
             ->where('leads.0.city', 'Olinda')
         );
     });
+
+    test('pipeline index does not list leads belonging to another user', function () {
+        Lead::factory()->count(2)->create(['user_id' => User::factory()->create()->id]);
+        Lead::factory()->create();
+
+        $response = $this->get(route('pipeline.index'));
+
+        $response->assertInertia(fn ($page) => $page->has('leads', 1));
+    });
 });
