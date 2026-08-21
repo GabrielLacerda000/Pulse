@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import { Eye } from '@lucide/vue';
-import LeadWhatsAppButton from '@/components/leads/LeadWhatsAppButton.vue';
+import LeadMessageTemplateSelector from '@/components/leads/LeadMessageTemplateSelector.vue';
 import { Button } from '@/components/ui/button';
 import { show } from '@/routes/leads';
 import type { Lead } from '@/types';
@@ -33,8 +33,9 @@ defineProps<{
             </span>
 
             <div class="flex items-center gap-1">
-                <LeadWhatsAppButton
+                <LeadMessageTemplateSelector
                     :whatsapp-phone="lead.whatsapp_phone"
+                    :message-templates="lead.message_templates"
                     icon-only
                 />
                 <Button

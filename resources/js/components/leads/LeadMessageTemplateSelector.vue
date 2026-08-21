@@ -13,10 +13,16 @@ import { buildWhatsAppUrl } from '@/lib/whatsapp';
 import { create as createMessageTemplate } from '@/routes/message-templates';
 import type { RenderedMessageTemplate } from '@/types';
 
-const props = defineProps<{
-    whatsappPhone: string | null;
-    messageTemplates: RenderedMessageTemplate[];
-}>();
+const props = withDefaults(
+    defineProps<{
+        whatsappPhone: string | null;
+        messageTemplates: RenderedMessageTemplate[];
+        iconOnly?: boolean;
+    }>(),
+    {
+        iconOnly: false,
+    },
+);
 
 const templateUrls = computed(() => {
     const phone = props.whatsappPhone;
@@ -35,12 +41,16 @@ const templateUrls = computed(() => {
 <template>
     <div
         v-if="messageTemplates.length === 0"
-        class="flex items-center gap-2 text-sm text-muted-foreground"
+        :class="[
+            'flex items-center gap-2 text-sm text-muted-foreground',
+            iconOnly && 'whitespace-nowrap',
+        ]"
     >
-        Nenhum modelo de mensagem cadastrado.
+        <span v-if="!iconOnly">Nenhum modelo de mensagem cadastrado.</span>
         <Link
             :href="createMessageTemplate()"
             class="text-primary underline-offset-4 hover:underline"
+            :title="iconOnly ? 'Nenhum modelo de mensagem cadastrado. Criar modelo' : undefined"
         >
             Criar modelo
         </Link>
@@ -49,8 +59,9 @@ const templateUrls = computed(() => {
     <DropdownMenu v-else>
         <DropdownMenuTrigger as-child>
             <Button
-                variant="outline"
-                class="rounded-full"
+                :variant="iconOnly ? 'ghost' : 'outline'"
+                :size="iconOnly ? 'icon-sm' : undefined"
+                :class="iconOnly ? undefined : 'rounded-full'"
                 :disabled="!whatsappPhone"
                 :title="
                     whatsappPhone
@@ -59,8 +70,10 @@ const templateUrls = computed(() => {
                 "
             >
                 <MessageCircle class="size-4" />
-                Abrir WhatsApp
-                <ChevronDown class="size-4" />
+                <template v-if="!iconOnly">
+                    Abrir WhatsApp
+                    <ChevronDown class="size-4" />
+                </template>
             </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">

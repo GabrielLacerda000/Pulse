@@ -48,6 +48,29 @@ describe('as an authenticated user', function () {
         );
     });
 
+    test('leads index exposes the user\'s message templates rendered for each lead', function () {
+        Lead::factory()->create(['company_name' => 'Padaria do João', 'city' => 'Recife']);
+        $template = MessageTemplate::factory()->create(['name' => 'Primeiro contato', 'content' => 'Olá {nome}, tudo bem em {cidade}?']);
+
+        $response = $this->get(route('leads.index'));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('leads.data.0.message_templates.0.id', $template->id)
+            ->where('leads.data.0.message_templates.0.name', 'Primeiro contato')
+            ->where('leads.data.0.message_templates.0.renderedContent', 'Olá Padaria do João, tudo bem em Recife?')
+        );
+    });
+
+    test('leads index exposes an empty message templates list for a lead when the user has no templates', function () {
+        Lead::factory()->create();
+
+        $response = $this->get(route('leads.index'));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('leads.data.0.message_templates', [])
+        );
+    });
+
     test('a lead can be created manually with default status new', function () {
         $data = [
             'company_name' => 'Clínica Exemplo',

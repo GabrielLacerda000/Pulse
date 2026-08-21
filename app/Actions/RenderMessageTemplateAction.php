@@ -4,6 +4,7 @@ namespace App\Actions;
 
 use App\Models\Lead;
 use App\Models\MessageTemplate;
+use Illuminate\Support\Collection;
 
 final class RenderMessageTemplateAction
 {
@@ -31,6 +32,22 @@ final class RenderMessageTemplateAction
             fn (array $matches): string => $this->resolve($matches[1], $lead),
             $template->content,
         ) ?? $template->content;
+    }
+
+    /**
+     * Render each of the given templates for the given Lead, as the
+     * {id, name, renderedContent} shape the frontend expects.
+     *
+     * @param  Collection<int, MessageTemplate>  $templates
+     * @return Collection<int, array{id: int, name: string, renderedContent: string}>
+     */
+    public function executeAllFor(Lead $lead, Collection $templates): Collection
+    {
+        return $templates->map(fn (MessageTemplate $template): array => [
+            'id' => $template->id,
+            'name' => $template->name,
+            'renderedContent' => $this->execute($template, $lead),
+        ]);
     }
 
     private function resolve(string $variable, Lead $lead): string

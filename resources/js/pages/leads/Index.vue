@@ -6,7 +6,7 @@ import LeadDeleteDialog from '@/components/leads/LeadDeleteDialog.vue';
 import LeadsFilterBar from '@/components/leads/LeadsFilterBar.vue';
 import LeadSortableHeader from '@/components/leads/LeadSortableHeader.vue';
 import LeadStatusBadge from '@/components/leads/LeadStatusBadge.vue';
-import LeadWhatsAppButton from '@/components/leads/LeadWhatsAppButton.vue';
+import LeadMessageTemplateSelector from '@/components/leads/LeadMessageTemplateSelector.vue';
 import LeadsPagination from '@/components/LeadsPagination.vue';
 import { Button } from '@/components/ui/button';
 import { useLeadFilters } from '@/composables/useLeadFilters';
@@ -153,8 +153,9 @@ defineOptions({
                         </td>
                         <td class="px-4 py-3">
                             <div class="flex items-center gap-1">
-                                <LeadWhatsAppButton
+                                <LeadMessageTemplateSelector
                                     :whatsapp-phone="lead.whatsapp_phone"
+                                    :message-templates="lead.message_templates"
                                     icon-only
                                 />
                                 <Button

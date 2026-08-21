@@ -2,6 +2,7 @@
 
 use App\Enums\LeadStatus;
 use App\Models\Lead;
+use App\Models\MessageTemplate;
 use App\Models\User;
 
 test('guests are redirected to the login page', function () {
@@ -24,6 +25,29 @@ describe('as an authenticated user', function () {
         $response->assertInertia(fn ($page) => $page
             ->component('pipeline/Index')
             ->has('leads', 3)
+        );
+    });
+
+    test('pipeline index exposes the user\'s message templates rendered for each lead', function () {
+        Lead::factory()->create(['company_name' => 'Padaria do João', 'city' => 'Recife']);
+        $template = MessageTemplate::factory()->create(['name' => 'Primeiro contato', 'content' => 'Olá {nome}, tudo bem em {cidade}?']);
+
+        $response = $this->get(route('pipeline.index'));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('leads.0.message_templates.0.id', $template->id)
+            ->where('leads.0.message_templates.0.name', 'Primeiro contato')
+            ->where('leads.0.message_templates.0.renderedContent', 'Olá Padaria do João, tudo bem em Recife?')
+        );
+    });
+
+    test('pipeline index exposes an empty message templates list for a lead when the user has no templates', function () {
+        Lead::factory()->create();
+
+        $response = $this->get(route('pipeline.index'));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('leads.0.message_templates', [])
         );
     });
 

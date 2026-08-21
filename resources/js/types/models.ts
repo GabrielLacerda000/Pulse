@@ -31,6 +31,7 @@ export type Lead = {
     notes: string | null;
     created_at: string;
     updated_at: string;
+    message_templates: RenderedMessageTemplate[];
 };
 
 export type LeadSortColumn = 'company_name' | 'score' | 'status';

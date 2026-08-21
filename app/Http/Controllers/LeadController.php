@@ -15,6 +15,7 @@ use App\Models\Lead;
 use App\Models\MessageTemplate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -23,9 +24,10 @@ class LeadController extends Controller
     /**
      * Display a listing of the leads.
      */
-    public function index(Request $request): Response
+    public function index(Request $request, RenderMessageTemplateAction $action): Response
     {
         $filters = $request->only(['search', 'status', 'category', 'city', 'sort', 'direction']);
+        $templates = MessageTemplate::all();
 
         return Inertia::render('leads/Index', [
             'leads' => Lead::query()
@@ -34,7 +36,8 @@ class LeadController extends Controller
                 ->filterCategory($filters['category'] ?? null)
                 ->filterCity($filters['city'] ?? null)
                 ->sortBy($filters['sort'] ?? null, $filters['direction'] ?? null)
-                ->paginate(15),
+                ->paginate(15)
+                ->through(fn (Lead $lead): Lead => $this->withRenderedMessageTemplates($lead, $templates, $action)),
             'filters' => $filters,
             'filterOptions' => Lead::filterOptions(),
         ]);
@@ -65,13 +68,7 @@ class LeadController extends Controller
     {
         return Inertia::render('leads/Show', [
             'lead' => $lead,
-            'messageTemplates' => MessageTemplate::query()
-                ->get()
-                ->map(fn (MessageTemplate $template): array => [
-                    'id' => $template->id,
-                    'name' => $template->name,
-                    'renderedContent' => $action->execute($template, $lead),
-                ]),
+            'messageTemplates' => $action->executeAllFor($lead, MessageTemplate::all()),
         ]);
     }
 
@@ -125,5 +122,17 @@ class LeadController extends Controller
         $lead->delete();
 
         return to_route('leads.index');
+    }
+
+    /**
+     * Attach the given templates rendered for the lead as a `message_templates` attribute.
+     *
+     * @param  Collection<int, MessageTemplate>  $templates
+     */
+    private function withRenderedMessageTemplates(Lead $lead, Collection $templates, RenderMessageTemplateAction $action): Lead
+    {
+        $lead->setAttribute('message_templates', $action->executeAllFor($lead, $templates));
+
+        return $lead;
     }
 }
