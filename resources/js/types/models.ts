@@ -49,3 +49,10 @@ export type LeadFilterOptions = {
     categories: string[];
     cities: string[];
 };
+
+export type LeadImportPreview = {
+    total: number;
+    new: number;
+    duplicated: number;
+    invalid: number;
+};

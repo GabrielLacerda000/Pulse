@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { Eye, Pencil, Plus } from '@lucide/vue';
+import { Eye, Pencil, Plus, Upload } from '@lucide/vue';
 import Heading from '@/components/Heading.vue';
 import LeadDeleteDialog from '@/components/leads/LeadDeleteDialog.vue';
 import LeadsFilterBar from '@/components/leads/LeadsFilterBar.vue';
@@ -12,6 +12,7 @@ import { useLeadFilters } from '@/composables/useLeadFilters';
 import { usePhoneMask } from '@/composables/usePhoneMask';
 import { dashboard } from '@/routes';
 import { create, edit as editLead, index, show } from '@/routes/leads';
+import { create as createImport } from '@/routes/leads/import';
 import type { Lead, LeadFilterOptions, LeadFilters } from '@/types';
 
 const props = defineProps<{
@@ -43,12 +44,20 @@ defineOptions({
                 description="Gerencie os leads captados e cadastrados manualmente"
             />
 
-            <Button as-child class="rounded-full">
-                <Link :href="create()">
-                    <Plus class="size-4" />
-                    Novo lead
-                </Link>
-            </Button>
+            <div class="flex items-center gap-2">
+                <Button as-child variant="secondary" class="rounded-full">
+                    <Link :href="createImport()">
+                        <Upload class="size-4" />
+                        Importar
+                    </Link>
+                </Button>
+                <Button as-child class="rounded-full">
+                    <Link :href="create()">
+                        <Plus class="size-4" />
+                        Novo lead
+                    </Link>
+                </Button>
+            </div>
         </div>
 
         <LeadsFilterBar
