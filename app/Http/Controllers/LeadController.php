@@ -32,7 +32,7 @@ class LeadController extends Controller
                 ->filterCategory($filters['category'] ?? null)
                 ->filterCity($filters['city'] ?? null)
                 ->sortBy($filters['sort'] ?? null, $filters['direction'] ?? null)
-                ->get(),
+                ->paginate(15),
             'filters' => $filters,
             'filterOptions' => [
                 'statuses' => LeadStatus::cases(),

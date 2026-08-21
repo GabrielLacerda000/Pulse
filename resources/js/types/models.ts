@@ -50,6 +50,14 @@ export type LeadFilterOptions = {
     cities: string[];
 };
 
+export type Paginated<T> = {
+    data: T[];
+    current_page: number;
+    last_page: number;
+    per_page: number;
+    total: number;
+};
+
 export type LeadImportPreview = {
     total: number;
     new: number;

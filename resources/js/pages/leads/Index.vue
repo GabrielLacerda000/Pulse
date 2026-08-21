@@ -7,22 +7,23 @@ import LeadsFilterBar from '@/components/leads/LeadsFilterBar.vue';
 import LeadSortableHeader from '@/components/leads/LeadSortableHeader.vue';
 import LeadStatusBadge from '@/components/leads/LeadStatusBadge.vue';
 import LeadWhatsAppButton from '@/components/leads/LeadWhatsAppButton.vue';
+import LeadsPagination from '@/components/LeadsPagination.vue';
 import { Button } from '@/components/ui/button';
 import { useLeadFilters } from '@/composables/useLeadFilters';
 import { usePhoneMask } from '@/composables/usePhoneMask';
 import { dashboard } from '@/routes';
 import { create, edit as editLead, index, show } from '@/routes/leads';
 import { create as createImport } from '@/routes/leads/import';
-import type { Lead, LeadFilterOptions, LeadFilters } from '@/types';
+import type { Lead, LeadFilterOptions, LeadFilters, Paginated } from '@/types';
 
 const props = defineProps<{
-    leads: Lead[];
+    leads: Paginated<Lead>;
     filters: LeadFilters;
     filterOptions: LeadFilterOptions;
 }>();
 
 const { formatPhoneDisplay } = usePhoneMask();
-const { filters, toggleSort } = useLeadFilters(props.filters);
+const { filters, toggleSort, goToPage } = useLeadFilters(props.filters);
 
 defineOptions({
     layout: {
@@ -110,7 +111,7 @@ defineOptions({
                 </thead>
                 <tbody>
                     <tr
-                        v-if="leads.length === 0"
+                        v-if="leads.data.length === 0"
                         class="border-b border-border/60 last:border-b-0"
                     >
                         <td
@@ -121,7 +122,7 @@ defineOptions({
                         </td>
                     </tr>
                     <tr
-                        v-for="lead in leads"
+                        v-for="lead in leads.data"
                         :key="lead.id"
                         class="border-b border-border/60 last:border-b-0"
                     >
@@ -183,5 +184,11 @@ defineOptions({
                 </tbody>
             </table>
         </div>
+
+        <LeadsPagination
+            :current-page="leads.current_page"
+            :last-page="leads.last_page"
+            @change="goToPage"
+        />
     </div>
 </template>

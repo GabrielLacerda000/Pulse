@@ -52,8 +52,22 @@ export function useLeadFilters(initialFilters: LeadFilters) {
         applyFilters();
     }
 
+    function goToPage(page: number) {
+        router.get(
+            index.url(),
+            { ...toQueryParams(filters), page },
+            {
+                preserveState: true,
+                preserveScroll: true,
+                replace: true,
+                only: ['leads', 'filters'],
+            },
+        );
+    }
+
     return {
         filters,
         toggleSort,
+        goToPage,
     };
 }

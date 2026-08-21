@@ -23,7 +23,7 @@ describe('as an authenticated user', function () {
         $response->assertOk();
         $response->assertInertia(fn ($page) => $page
             ->component('leads/Index')
-            ->has('leads', 3)
+            ->has('leads.data', 3)
         );
     });
 
@@ -33,7 +33,7 @@ describe('as an authenticated user', function () {
         $response = $this->get(route('leads.index'));
 
         $response->assertInertia(fn ($page) => $page
-            ->where('leads.0.whatsapp_phone', '558134827554')
+            ->where('leads.data.0.whatsapp_phone', '558134827554')
         );
     });
 
@@ -43,7 +43,7 @@ describe('as an authenticated user', function () {
         $response = $this->get(route('leads.index'));
 
         $response->assertInertia(fn ($page) => $page
-            ->where('leads.0.whatsapp_phone', null)
+            ->where('leads.data.0.whatsapp_phone', null)
         );
     });
 
@@ -197,8 +197,8 @@ describe('as an authenticated user', function () {
         $response = $this->get(route('leads.index', ['search' => 'Sorriso']));
 
         $response->assertInertia(fn ($page) => $page
-            ->has('leads', 1)
-            ->where('leads.0.company_name', 'Clínica Sorriso')
+            ->has('leads.data', 1)
+            ->where('leads.data.0.company_name', 'Clínica Sorriso')
         );
     });
 
@@ -209,8 +209,8 @@ describe('as an authenticated user', function () {
         $response = $this->get(route('leads.index', ['status' => LeadStatus::WON->value]));
 
         $response->assertInertia(fn ($page) => $page
-            ->has('leads', 1)
-            ->where('leads.0.status', LeadStatus::WON->value)
+            ->has('leads.data', 1)
+            ->where('leads.data.0.status', LeadStatus::WON->value)
         );
     });
 
@@ -221,8 +221,8 @@ describe('as an authenticated user', function () {
         $response = $this->get(route('leads.index', ['category' => 'Advocacia']));
 
         $response->assertInertia(fn ($page) => $page
-            ->has('leads', 1)
-            ->where('leads.0.category', 'Advocacia')
+            ->has('leads.data', 1)
+            ->where('leads.data.0.category', 'Advocacia')
         );
     });
 
@@ -233,8 +233,8 @@ describe('as an authenticated user', function () {
         $response = $this->get(route('leads.index', ['city' => 'Olinda']));
 
         $response->assertInertia(fn ($page) => $page
-            ->has('leads', 1)
-            ->where('leads.0.city', 'Olinda')
+            ->has('leads.data', 1)
+            ->where('leads.data.0.city', 'Olinda')
         );
     });
 
@@ -245,8 +245,8 @@ describe('as an authenticated user', function () {
         $response = $this->get(route('leads.index', ['sort' => 'score', 'direction' => 'asc']));
 
         $response->assertInertia(fn ($page) => $page
-            ->where('leads.0.company_name', 'Baixo Score')
-            ->where('leads.1.company_name', 'Alto Score')
+            ->where('leads.data.0.company_name', 'Baixo Score')
+            ->where('leads.data.1.company_name', 'Alto Score')
         );
     });
 
@@ -257,8 +257,8 @@ describe('as an authenticated user', function () {
         $response = $this->get(route('leads.index', ['sort' => 'company_name', 'direction' => 'desc']));
 
         $response->assertInertia(fn ($page) => $page
-            ->where('leads.0.company_name', 'Zeta')
-            ->where('leads.1.company_name', 'Alfa')
+            ->where('leads.data.0.company_name', 'Zeta')
+            ->where('leads.data.1.company_name', 'Alfa')
         );
     });
 
@@ -270,7 +270,43 @@ describe('as an authenticated user', function () {
 
         $response->assertOk();
         $response->assertInertia(fn ($page) => $page
-            ->where('leads.0.company_name', 'Newer Lead')
+            ->where('leads.data.0.company_name', 'Newer Lead')
+        );
+    });
+
+    test('leads index paginates results and reports pagination metadata', function () {
+        Lead::factory()->count(20)->create();
+
+        $response = $this->get(route('leads.index'));
+
+        $response->assertInertia(fn ($page) => $page
+            ->has('leads.data', 15)
+            ->where('leads.current_page', 1)
+            ->where('leads.last_page', 2)
+            ->where('leads.per_page', 15)
+            ->where('leads.total', 20)
+        );
+
+        $response = $this->get(route('leads.index', ['page' => 2]));
+
+        $response->assertInertia(fn ($page) => $page
+            ->has('leads.data', 5)
+            ->where('leads.current_page', 2)
+        );
+    });
+
+    test('a filter narrows the paginated total across the whole result set, not just the current page', function () {
+        Lead::factory()->count(20)->create(['status' => LeadStatus::NEW]);
+        Lead::factory()->create(['status' => LeadStatus::WON, 'company_name' => 'Won Company']);
+
+        $response = $this->get(route('leads.index', ['status' => LeadStatus::WON->value]));
+
+        $response->assertInertia(fn ($page) => $page
+            ->has('leads.data', 1)
+            ->where('leads.data.0.company_name', 'Won Company')
+            ->where('leads.current_page', 1)
+            ->where('leads.last_page', 1)
+            ->where('leads.total', 1)
         );
     });
 
