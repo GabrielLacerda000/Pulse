@@ -42,13 +42,20 @@ final class ImportLeadsAction
             $createdLeadIdsByRow = [];
 
             foreach ($rows as $index => $row) {
-                if ($row['status'] === LeadImportRowStatus::INVALID) {
+                // $rows normally arrives fresh from LeadImportController's session
+                // (config('session.serialization') is "json" by default), which
+                // collapses the backed enum to its scalar value on round-trip.
+                $status = $row['status'] instanceof LeadImportRowStatus
+                    ? $row['status']
+                    : LeadImportRowStatus::from($row['status']);
+
+                if ($status === LeadImportRowStatus::INVALID) {
                     $invalid++;
 
                     continue;
                 }
 
-                if ($row['status'] === LeadImportRowStatus::NEW) {
+                if ($status === LeadImportRowStatus::NEW) {
                     $createdLeadIdsByRow[$index] = $this->createLead($row['attributes']);
                     $created++;
 

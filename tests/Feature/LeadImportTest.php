@@ -1,5 +1,7 @@
 <?php
 
+use App\Actions\ImportLeadsAction;
+use App\Actions\ParseLeadImportAction;
 use App\Enums\LeadStatus;
 use App\Models\Lead;
 use App\Models\User;
@@ -170,5 +172,35 @@ describe('as an authenticated user', function () {
 
         $response->assertRedirect(route('leads.index'));
         expect(Lead::count())->toBe(1);
+    });
+
+    test('importing rows that round-tripped through a JSON-serialized session does not crash', function () {
+        // Reproduces app/Http/Controllers/LeadImportController.php's real session
+        // round trip: config('session.serialization') is "json" by default, which
+        // collapses each row's LeadImportRowStatus enum to its scalar value.
+        $existing = Lead::factory()->create(['phone' => '5581988887777']);
+
+        $file = fakeLeadsSpreadsheet([
+            ['Clínica Nova', 'Clínica odontológica', '81999990000', '', '', 'Não', '', 'Não', 'Recife', 'PE', 'Novo', 'Sem presença', '80', '', '', 'google_maps', '', ''],
+            ['', 'Sem nome', '81999991111', '', '', 'Não', '', 'Não', 'Olinda', 'PE', 'Novo', 'Sem presença', '10', '', '', 'google_maps', '', ''],
+            ['Empresa Existente', 'Restaurante', '81988887777', '', '', 'Sim', '', 'Sim', 'Recife', 'PE', 'Novo', 'Com site', '90', '4.9', '50', 'google_maps', '', ''],
+            ['Empresa Duplicada', 'Restaurante', '81977776666', '', '', 'Não', '', 'Não', 'Recife', 'PE', 'Novo', 'Sem presença', '50', '', '', 'google_maps', '', ''],
+            ['Empresa Duplicada Ltda', 'Restaurante', '81977776666', '', '', 'Sim', '', 'Sim', 'Recife', 'PE', 'Novo', 'Com site', '70', '4.2', '10', 'google_maps', '', ''],
+        ]);
+
+        $rows = app(ParseLeadImportAction::class)->execute($file)['rows'];
+        $sessionShapedRows = json_decode(json_encode($rows), true);
+
+        $summary = app(ImportLeadsAction::class)->execute($sessionShapedRows);
+
+        expect($summary)->toBe([
+            'total' => 5,
+            'created' => 2,
+            'duplicated' => 2,
+            'invalid' => 1,
+        ]);
+        expect(Lead::firstWhere('company_name', 'Clínica Nova'))->not->toBeNull();
+        expect($existing->fresh()->score)->toBe(90);
+        expect(Lead::firstWhere('company_name', 'Empresa Duplicada')?->score)->toBe(70);
     });
 });
