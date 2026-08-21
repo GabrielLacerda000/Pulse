@@ -4,16 +4,17 @@ import { AtSign, Globe, Mail, MapPin, Pencil, Phone, Star } from '@lucide/vue';
 import { computed } from 'vue';
 import Heading from '@/components/Heading.vue';
 import LeadDeleteDialog from '@/components/leads/LeadDeleteDialog.vue';
+import LeadMessageTemplateSelector from '@/components/leads/LeadMessageTemplateSelector.vue';
 import LeadNotesForm from '@/components/leads/LeadNotesForm.vue';
 import LeadStatusBadge from '@/components/leads/LeadStatusBadge.vue';
-import LeadWhatsAppButton from '@/components/leads/LeadWhatsAppButton.vue';
 import { Button } from '@/components/ui/button';
 import { dashboard } from '@/routes';
 import { edit as editLead, index } from '@/routes/leads';
-import type { Lead } from '@/types';
+import type { Lead, RenderedMessageTemplate } from '@/types';
 
 const props = defineProps<{
     lead: Lead;
+    messageTemplates: RenderedMessageTemplate[];
 }>();
 
 defineOptions({
@@ -42,7 +43,10 @@ const location = computed(() => {
             <Heading :title="lead.company_name" :description="lead.category ?? undefined" />
 
             <div class="flex shrink-0 items-center gap-1">
-                <LeadWhatsAppButton :whatsapp-phone="lead.whatsapp_phone" />
+                <LeadMessageTemplateSelector
+                    :whatsapp-phone="lead.whatsapp_phone"
+                    :message-templates="messageTemplates"
+                />
                 <Button as-child variant="outline" class="rounded-full">
                     <Link :href="editLead(lead.id)">
                         <Pencil class="size-4" />

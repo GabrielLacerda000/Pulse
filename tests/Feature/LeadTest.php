@@ -2,6 +2,7 @@
 
 use App\Enums\LeadStatus;
 use App\Models\Lead;
+use App\Models\MessageTemplate;
 use App\Models\User;
 
 test('guests are redirected to the login page', function () {
@@ -108,6 +109,42 @@ describe('as an authenticated user', function () {
 
         $response->assertInertia(fn ($page) => $page
             ->where('lead.whatsapp_phone', null)
+        );
+    });
+
+    test('a lead exposes the user\'s message templates rendered for it', function () {
+        $lead = Lead::factory()->create(['company_name' => 'Padaria do João', 'city' => 'Recife']);
+        $template = MessageTemplate::factory()->create(['name' => 'Primeiro contato', 'content' => 'Olá {nome}, tudo bem em {cidade}?']);
+
+        $response = $this->get(route('leads.show', $lead));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('messageTemplates.0.id', $template->id)
+            ->where('messageTemplates.0.name', 'Primeiro contato')
+            ->where('messageTemplates.0.renderedContent', 'Olá Padaria do João, tudo bem em Recife?')
+        );
+    });
+
+    test('a lead with no message templates exposes an empty list', function () {
+        $lead = Lead::factory()->create();
+
+        $response = $this->get(route('leads.show', $lead));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('messageTemplates', [])
+        );
+    });
+
+    test('a lead only exposes the acting user\'s own message templates', function () {
+        $lead = Lead::factory()->create();
+        MessageTemplate::factory()->count(2)->create(['user_id' => User::factory()->create()->id]);
+        $own = MessageTemplate::factory()->create();
+
+        $response = $this->get(route('leads.show', $lead));
+
+        $response->assertInertia(fn ($page) => $page
+            ->has('messageTemplates', 1)
+            ->where('messageTemplates.0.id', $own->id)
         );
     });
 

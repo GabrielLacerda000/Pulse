@@ -73,3 +73,9 @@ export type MessageTemplate = {
     created_at: string;
     updated_at: string;
 };
+
+export type RenderedMessageTemplate = {
+    id: number;
+    name: string;
+    renderedContent: string;
+};

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Actions\CreateLeadAction;
+use App\Actions\RenderMessageTemplateAction;
 use App\Actions\UpdateLeadStatusAction;
 use App\Data\LeadData;
 use App\Enums\LeadStatus;
@@ -11,6 +12,7 @@ use App\Http\Requests\UpdateLeadNotesRequest;
 use App\Http\Requests\UpdateLeadRequest;
 use App\Http\Requests\UpdateLeadStatusRequest;
 use App\Models\Lead;
+use App\Models\MessageTemplate;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -59,10 +61,17 @@ class LeadController extends Controller
     /**
      * Display the specified lead.
      */
-    public function show(Lead $lead): Response
+    public function show(Lead $lead, RenderMessageTemplateAction $action): Response
     {
         return Inertia::render('leads/Show', [
             'lead' => $lead,
+            'messageTemplates' => MessageTemplate::query()
+                ->get()
+                ->map(fn (MessageTemplate $template): array => [
+                    'id' => $template->id,
+                    'name' => $template->name,
+                    'renderedContent' => $action->execute($template, $lead),
+                ]),
         ]);
     }
 
