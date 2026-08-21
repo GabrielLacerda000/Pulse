@@ -174,6 +174,36 @@ describe('as an authenticated user', function () {
         expect(Lead::count())->toBe(1);
     });
 
+    test('confirming an import creates leads owned by the authenticated user', function () {
+        $file = fakeLeadsSpreadsheet([
+            ['Clínica Nova', 'Clínica odontológica', '81999990000', 'nova@exemplo.com', 'nova.com.br', 'Sim', '@nova', 'Não', 'Recife', 'PE', 'Novo', 'Com site', '80', '4.5', '20', 'google_maps', 'https://maps.example/nova', '2026-01-10'],
+        ]);
+
+        $this->post(route('leads.import.preview'), ['file' => $file]);
+        $this->post(route('leads.import.store'));
+
+        $lead = Lead::firstWhere('company_name', 'Clínica Nova');
+
+        expect($lead->user_id)->toBe(auth()->id());
+    });
+
+    test('leads imported by one user do not appear for another user', function () {
+        $file = fakeLeadsSpreadsheet([
+            ['Clínica Nova', 'Clínica odontológica', '81999990000', 'nova@exemplo.com', 'nova.com.br', 'Sim', '@nova', 'Não', 'Recife', 'PE', 'Novo', 'Com site', '80', '4.5', '20', 'google_maps', 'https://maps.example/nova', '2026-01-10'],
+        ]);
+
+        $this->post(route('leads.import.preview'), ['file' => $file]);
+        $this->post(route('leads.import.store'));
+
+        $this->actingAs(User::factory()->create());
+
+        $leadsIndex = $this->get(route('leads.index'));
+        $leadsIndex->assertInertia(fn ($page) => $page->has('leads.data', 0));
+
+        $pipelineIndex = $this->get(route('pipeline.index'));
+        $pipelineIndex->assertInertia(fn ($page) => $page->has('leads', 0));
+    });
+
     test('importing rows that round-tripped through a JSON-serialized session does not crash', function () {
         // Reproduces app/Http/Controllers/LeadImportController.php's real session
         // round trip: config('session.serialization') is "json" by default, which
