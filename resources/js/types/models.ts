@@ -64,3 +64,12 @@ export type LeadImportPreview = {
     duplicated: number;
     invalid: number;
 };
+
+export type MessageTemplate = {
+    id: number;
+    name: string;
+    content: string;
+    channel: string;
+    created_at: string;
+    updated_at: string;
+};

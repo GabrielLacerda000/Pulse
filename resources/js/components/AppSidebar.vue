@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
-import { BookOpen, FolderGit2, Kanban, LayoutGrid, Users } from '@lucide/vue';
+import {
+    BookOpen,
+    FolderGit2,
+    Kanban,
+    LayoutGrid,
+    MessageSquareText,
+    Users,
+} from '@lucide/vue';
 import AppLogo from '@/components/AppLogo.vue';
 import NavFooter from '@/components/NavFooter.vue';
 import NavMain from '@/components/NavMain.vue';
@@ -16,6 +23,7 @@ import {
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
 import { index as leadsIndex } from '@/routes/leads';
+import { index as messageTemplatesIndex } from '@/routes/message-templates';
 import { index as pipelineIndex } from '@/routes/pipeline';
 import type { NavItem } from '@/types';
 
@@ -34,6 +42,11 @@ const mainNavItems: NavItem[] = [
         title: 'Pipeline',
         href: pipelineIndex(),
         icon: Kanban,
+    },
+    {
+        title: 'Modelos de mensagem',
+        href: messageTemplatesIndex(),
+        icon: MessageSquareText,
     },
 ];
 

@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LeadImportController;
+use App\Http\Controllers\MessageTemplateController;
 use App\Http\Controllers\PipelineController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,6 +21,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::resource('leads', LeadController::class);
     Route::patch('leads/{lead}/notes', [LeadController::class, 'updateNotes'])->name('leads.notes.update');
     Route::patch('leads/{lead}/status', [LeadController::class, 'updateStatus'])->name('leads.status.update');
+
+    Route::resource('message-templates', MessageTemplateController::class)->except('show');
 });
 
 require __DIR__.'/settings.php';
