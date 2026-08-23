@@ -18,6 +18,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::post('leads/import/preview', [LeadImportController::class, 'preview'])->name('leads.import.preview');
     Route::post('leads/import', [LeadImportController::class, 'store'])->name('leads.import.store');
 
+    Route::delete('leads/bulk-destroy', [LeadController::class, 'bulkDestroy'])->name('leads.bulk-destroy');
+
     Route::resource('leads', LeadController::class);
     Route::patch('leads/{lead}/notes', [LeadController::class, 'updateNotes'])->name('leads.notes.update');
     Route::patch('leads/{lead}/status', [LeadController::class, 'updateStatus'])->name('leads.status.update');

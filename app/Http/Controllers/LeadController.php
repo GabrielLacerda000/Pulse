@@ -7,6 +7,7 @@ use App\Actions\RenderMessageTemplateAction;
 use App\Actions\UpdateLeadStatusAction;
 use App\Data\LeadData;
 use App\Enums\LeadStatus;
+use App\Http\Requests\BulkDestroyLeadRequest;
 use App\Http\Requests\StoreLeadRequest;
 use App\Http\Requests\UpdateLeadNotesRequest;
 use App\Http\Requests\UpdateLeadRequest;
@@ -122,6 +123,18 @@ class LeadController extends Controller
         $lead->delete();
 
         return to_route('leads.index');
+    }
+
+    /**
+     * Remove the specified leads from storage.
+     */
+    public function bulkDestroy(BulkDestroyLeadRequest $request): RedirectResponse
+    {
+        $count = Lead::query()->whereIn('id', $request->validated('ids'))->delete();
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __(':count leads excluídos.', ['count' => $count])]);
+
+        return back();
     }
 
     /**

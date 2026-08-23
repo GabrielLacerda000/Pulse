@@ -11,6 +11,14 @@ test('guests are redirected to the login page', function () {
     $response->assertRedirect(route('login'));
 });
 
+test('guests are redirected to the login page when bulk deleting leads', function () {
+    $lead = Lead::factory()->create();
+
+    $response = $this->delete(route('leads.bulk-destroy'), ['ids' => [$lead->id]]);
+
+    $response->assertRedirect(route('login'));
+});
+
 describe('as an authenticated user', function () {
     beforeEach(function () {
         $this->actingAs(User::factory()->create());
@@ -377,6 +385,64 @@ describe('as an authenticated user', function () {
 
         $response->assertRedirect(route('leads.index'));
         expect(Lead::find($lead->id))->toBeNull();
+    });
+
+    test('leads can be bulk deleted', function () {
+        $leads = Lead::factory()->count(3)->create();
+
+        $response = $this->delete(route('leads.bulk-destroy'), [
+            'ids' => $leads->pluck('id')->all(),
+        ]);
+
+        $response->assertRedirect();
+        expect(Lead::whereIn('id', $leads->pluck('id'))->count())->toBe(0);
+    });
+
+    test('bulk delete flashes a toast reporting how many leads were deleted', function () {
+        $leads = Lead::factory()->count(2)->create();
+
+        $response = $this->delete(route('leads.bulk-destroy'), [
+            'ids' => $leads->pluck('id')->all(),
+        ]);
+
+        $response->assertSessionHas('inertia.flash_data', [
+            'toast' => ['type' => 'success', 'message' => __(':count leads excluídos.', ['count' => 2])],
+        ]);
+    });
+
+    test('bulk delete preserves current filters and pagination on redirect', function () {
+        $lead = Lead::factory()->create();
+
+        $response = $this
+            ->from(route('leads.index', ['status' => LeadStatus::WON->value, 'page' => 2]))
+            ->delete(route('leads.bulk-destroy'), ['ids' => [$lead->id]]);
+
+        $response->assertRedirect(route('leads.index', ['status' => LeadStatus::WON->value, 'page' => 2]));
+    });
+
+    test('bulk delete does not delete a lead belonging to another user, but succeeds for the caller\'s own leads', function () {
+        $ownLead = Lead::factory()->create();
+        $otherLead = Lead::factory()->create(['user_id' => User::factory()->create()->id]);
+
+        $response = $this->delete(route('leads.bulk-destroy'), [
+            'ids' => [$ownLead->id, $otherLead->id],
+        ]);
+
+        $response->assertRedirect();
+        expect(Lead::find($ownLead->id))->toBeNull();
+        expect(Lead::withoutGlobalScopes()->find($otherLead->id))->not->toBeNull();
+    });
+
+    test('bulk delete rejects an empty ids array', function () {
+        $response = $this->delete(route('leads.bulk-destroy'), ['ids' => []]);
+
+        $response->assertSessionHasErrors('ids');
+    });
+
+    test('bulk delete rejects a non-existent lead id', function () {
+        $response = $this->delete(route('leads.bulk-destroy'), ['ids' => [999999]]);
+
+        $response->assertSessionHasErrors('ids.0');
     });
 
     test('leads index does not list leads belonging to another user', function () {
