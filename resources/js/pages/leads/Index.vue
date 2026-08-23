@@ -1,15 +1,20 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import { Eye, Pencil, Plus, Upload } from '@lucide/vue';
+import { ref } from 'vue';
 import Heading from '@/components/Heading.vue';
 import LeadDeleteDialog from '@/components/leads/LeadDeleteDialog.vue';
+import LeadMessageTemplateSelector from '@/components/leads/LeadMessageTemplateSelector.vue';
+import LeadsBulkActionsBar from '@/components/leads/LeadsBulkActionsBar.vue';
+import LeadsBulkDeleteDialog from '@/components/leads/LeadsBulkDeleteDialog.vue';
 import LeadsFilterBar from '@/components/leads/LeadsFilterBar.vue';
 import LeadSortableHeader from '@/components/leads/LeadSortableHeader.vue';
 import LeadStatusBadge from '@/components/leads/LeadStatusBadge.vue';
-import LeadMessageTemplateSelector from '@/components/leads/LeadMessageTemplateSelector.vue';
 import LeadsPagination from '@/components/LeadsPagination.vue';
 import { Button } from '@/components/ui/button';
+import { Checkbox } from '@/components/ui/checkbox';
 import { useLeadFilters } from '@/composables/useLeadFilters';
+import { useLeadSelection } from '@/composables/useLeadSelection';
 import { usePhoneMask } from '@/composables/usePhoneMask';
 import { dashboard } from '@/routes';
 import { create, edit as editLead, index, show } from '@/routes/leads';
@@ -24,6 +29,16 @@ const props = defineProps<{
 
 const { formatPhoneDisplay } = usePhoneMask();
 const { filters, toggleSort, goToPage } = useLeadFilters(props.filters);
+
+const bulkDeleteDialogOpen = ref(false);
+
+const {
+    selectedIds,
+    headerCheckboxState,
+    toggleAll,
+    toggleRow,
+    clearSelection,
+} = useLeadSelection(() => props.leads.data.map((lead) => lead.id));
 
 defineOptions({
     layout: {
@@ -61,12 +76,25 @@ defineOptions({
             </div>
         </div>
 
+        <LeadsBulkActionsBar
+            v-if="selectedIds.size > 0"
+            :count="selectedIds.size"
+            @delete="bulkDeleteDialogOpen = true"
+            @clear="clearSelection"
+        />
         <LeadsFilterBar
+            v-else
             v-model:search="filters.search"
             v-model:status="filters.status"
             v-model:category="filters.category"
             v-model:city="filters.city"
             :filter-options="filterOptions"
+        />
+
+        <LeadsBulkDeleteDialog
+            v-model:open="bulkDeleteDialogOpen"
+            :ids="Array.from(selectedIds)"
+            @deleted="clearSelection"
         />
 
         <div class="overflow-x-auto rounded-xl border border-border">
@@ -75,6 +103,13 @@ defineOptions({
                     <tr
                         class="border-b border-border bg-muted text-xs font-semibold tracking-wide text-muted-foreground uppercase"
                     >
+                        <th class="w-10 px-4 py-3">
+                            <Checkbox
+                                :model-value="headerCheckboxState"
+                                aria-label="Selecionar todos os leads da página"
+                                @update:model-value="toggleAll"
+                            />
+                        </th>
                         <th class="px-4 py-3 font-semibold">
                             <LeadSortableHeader
                                 column="company_name"
@@ -115,7 +150,7 @@ defineOptions({
                         class="border-b border-border/60 last:border-b-0"
                     >
                         <td
-                            colspan="8"
+                            colspan="9"
                             class="px-4 py-8 text-center text-muted-foreground"
                         >
                             Nenhum lead encontrado.
@@ -126,6 +161,15 @@ defineOptions({
                         :key="lead.id"
                         class="border-b border-border/60 last:border-b-0"
                     >
+                        <td class="px-4 py-3">
+                            <Checkbox
+                                :model-value="selectedIds.has(lead.id)"
+                                :aria-label="`Selecionar ${lead.company_name}`"
+                                @update:model-value="
+                                    (checked) => toggleRow(lead.id, checked)
+                                "
+                            />
+                        </td>
                         <td class="px-4 py-3 font-medium">
                             {{ lead.company_name }}
                         </td>
