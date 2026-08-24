@@ -150,6 +150,7 @@ function handleDisconnect() {
                             props.connection.status === 'disconnected' ||
                             props.connection.status === 'logged_out'
                         "
+                        class="rounded-full"
                         @click="handleConnect"
                     >
                         <LogIn class="size-4" />
@@ -162,6 +163,7 @@ function handleDisconnect() {
                             props.connection.status === 'connecting'
                         "
                         variant="outline"
+                        class="rounded-full"
                         @click="handleDisconnect"
                     >
                         <LogOut class="size-4" />
