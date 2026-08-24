@@ -107,6 +107,7 @@ defineOptions({
                             <Checkbox
                                 :model-value="headerCheckboxState"
                                 aria-label="Selecionar todos os leads da página"
+                                class="border-muted-foreground/50"
                                 @update:model-value="toggleAll"
                             />
                         </th>
