@@ -76,20 +76,28 @@ defineOptions({
             </div>
         </div>
 
-        <LeadsBulkActionsBar
-            v-if="selectedIds.size > 0"
-            :count="selectedIds.size"
-            @delete="bulkDeleteDialogOpen = true"
-            @clear="clearSelection"
-        />
-        <LeadsFilterBar
-            v-else
-            v-model:search="filters.search"
-            v-model:status="filters.status"
-            v-model:category="filters.category"
-            v-model:city="filters.city"
-            :filter-options="filterOptions"
-        />
+        <Transition
+            mode="out-in"
+            enter-active-class="animate-in fade-in-0 slide-in-from-top-2 duration-200"
+            leave-active-class="animate-out fade-out-0 slide-out-to-top-2 duration-150"
+        >
+            <LeadsBulkActionsBar
+                v-if="selectedIds.size > 0"
+                key="bulk-bar"
+                :count="selectedIds.size"
+                @delete="bulkDeleteDialogOpen = true"
+                @clear="clearSelection"
+            />
+            <LeadsFilterBar
+                v-else
+                key="filter-bar"
+                v-model:search="filters.search"
+                v-model:status="filters.status"
+                v-model:category="filters.category"
+                v-model:city="filters.city"
+                :filter-options="filterOptions"
+            />
+        </Transition>
 
         <LeadsBulkDeleteDialog
             v-model:open="bulkDeleteDialogOpen"
