@@ -5,6 +5,7 @@ import {
     FolderGit2,
     Kanban,
     LayoutGrid,
+    MessageCircle,
     MessageSquareText,
     Users,
 } from '@lucide/vue';
@@ -25,6 +26,7 @@ import { dashboard } from '@/routes';
 import { index as leadsIndex } from '@/routes/leads';
 import { index as messageTemplatesIndex } from '@/routes/message-templates';
 import { index as pipelineIndex } from '@/routes/pipeline';
+import { show as whatsappShow } from '@/routes/whatsapp';
 import type { NavItem } from '@/types';
 
 const mainNavItems: NavItem[] = [
@@ -47,6 +49,11 @@ const mainNavItems: NavItem[] = [
         title: 'Modelos de mensagem',
         href: messageTemplatesIndex(),
         icon: MessageSquareText,
+    },
+    {
+        title: 'WhatsApp',
+        href: whatsappShow(),
+        icon: MessageCircle,
     },
 ];
 

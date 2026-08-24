@@ -4,6 +4,7 @@ use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LeadImportController;
 use App\Http\Controllers\MessageTemplateController;
 use App\Http\Controllers\PipelineController;
+use App\Http\Controllers\WhatsAppConnectionController;
 use Illuminate\Support\Facades\Route;
 
 Route::inertia('/', 'Welcome')->name('home');
@@ -25,6 +26,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('leads/{lead}/status', [LeadController::class, 'updateStatus'])->name('leads.status.update');
 
     Route::resource('message-templates', MessageTemplateController::class)->except('show');
+
+    Route::get('whatsapp', [WhatsAppConnectionController::class, 'show'])->name('whatsapp.show');
+    Route::post('whatsapp/connect', [WhatsAppConnectionController::class, 'connect'])->name('whatsapp.connect');
+    Route::post('whatsapp/disconnect', [WhatsAppConnectionController::class, 'disconnect'])->name('whatsapp.disconnect');
 });
 
 require __DIR__.'/settings.php';

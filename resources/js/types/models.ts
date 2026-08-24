@@ -80,3 +80,16 @@ export type RenderedMessageTemplate = {
     name: string;
     renderedContent: string;
 };
+
+export type WhatsAppConnectionStatus =
+    | 'disconnected'
+    | 'connecting'
+    | 'qr_required'
+    | 'connected'
+    | 'logged_out';
+
+export type WhatsAppConnection = {
+    status: WhatsAppConnectionStatus;
+    phone: string | null;
+    qr: string | null;
+};

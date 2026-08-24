@@ -35,4 +35,9 @@ return [
         ],
     ],
 
+    'pulse_wpp' => [
+        'base_url' => env('PULSE_WPP_BASE_URL'),
+        'api_key' => env('PULSE_WPP_API_KEY'),
+    ],
+
 ];

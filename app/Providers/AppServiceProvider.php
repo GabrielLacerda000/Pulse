@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\PulseWppClient;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +16,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        //
+        $this->app->singleton(PulseWppClient::class, fn (): PulseWppClient => new PulseWppClient(
+            baseUrl: (string) config('services.pulse_wpp.base_url'),
+            apiKey: (string) config('services.pulse_wpp.api_key'),
+        ));
     }
 
     /**
