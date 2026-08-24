@@ -156,7 +156,7 @@ defineOptions({
                 <tbody>
                     <tr
                         v-if="leads.data.length === 0"
-                        class="border-b border-border/60 last:border-b-0"
+                        class="border-b border-border/60"
                     >
                         <td
                             colspan="9"
@@ -168,7 +168,7 @@ defineOptions({
                     <tr
                         v-for="lead in leads.data"
                         :key="lead.id"
-                        class="border-b border-border/60 last:border-b-0"
+                        class="border-b border-border/60"
                     >
                         <td class="px-4 py-3">
                             <Checkbox
