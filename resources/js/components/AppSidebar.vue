@@ -5,6 +5,7 @@ import {
     FolderGit2,
     Kanban,
     LayoutGrid,
+    Megaphone,
     MessageCircle,
     MessageSquareText,
     Users,
@@ -23,6 +24,7 @@ import {
     SidebarMenuItem,
 } from '@/components/ui/sidebar';
 import { dashboard } from '@/routes';
+import { index as campaignsIndex } from '@/routes/campaigns';
 import { index as leadsIndex } from '@/routes/leads';
 import { index as messageTemplatesIndex } from '@/routes/message-templates';
 import { index as pipelineIndex } from '@/routes/pipeline';
@@ -49,6 +51,11 @@ const mainNavItems: NavItem[] = [
         title: 'Modelos de mensagem',
         href: messageTemplatesIndex(),
         icon: MessageSquareText,
+    },
+    {
+        title: 'Campanhas',
+        href: campaignsIndex(),
+        icon: Megaphone,
     },
     {
         title: 'WhatsApp',
