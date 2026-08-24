@@ -143,6 +143,19 @@ class Lead extends Model
     }
 
     /**
+     * The leads eligible to be selected into a Campaign's Lead snapshot:
+     * those with a phone NormalizePhoneAction can turn into a WhatsApp number.
+     *
+     * @return Collection<int, Lead>
+     */
+    public static function selectableForCampaigns(): Collection
+    {
+        return static::all()
+            ->filter(fn (Lead $lead): bool => $lead->whatsapp_phone !== null)
+            ->values();
+    }
+
+    /**
      * The distinct filter option values available across all leads.
      *
      * @return array{statuses: array<LeadStatus>, categories: Collection<int, string>, cities: Collection<int, string>}

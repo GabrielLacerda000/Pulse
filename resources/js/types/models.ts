@@ -81,6 +81,21 @@ export type RenderedMessageTemplate = {
     renderedContent: string;
 };
 
+export type CampaignStatus = 'draft' | 'running' | 'completed' | 'failed';
+
+export type CampaignRecipientStatus = 'pending' | 'sent' | 'failed';
+
+export type Campaign = {
+    id: number;
+    name: string;
+    status: CampaignStatus;
+    delay_min_seconds: number;
+    delay_max_seconds: number;
+    recipients_count: number;
+    created_at: string;
+    updated_at: string;
+};
+
 export type WhatsAppConnectionStatus =
     | 'disconnected'
     | 'connecting'

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\CampaignController;
 use App\Http\Controllers\LeadController;
 use App\Http\Controllers\LeadImportController;
 use App\Http\Controllers\MessageTemplateController;
@@ -26,6 +27,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('leads/{lead}/status', [LeadController::class, 'updateStatus'])->name('leads.status.update');
 
     Route::resource('message-templates', MessageTemplateController::class)->except('show');
+
+    Route::resource('campaigns', CampaignController::class)->only(['index', 'create', 'store']);
 
     Route::get('whatsapp', [WhatsAppConnectionController::class, 'show'])->name('whatsapp.show');
     Route::post('whatsapp/connect', [WhatsAppConnectionController::class, 'connect'])->name('whatsapp.connect');
