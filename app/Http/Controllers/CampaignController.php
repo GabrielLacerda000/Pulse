@@ -32,8 +32,11 @@ class CampaignController extends Controller
      */
     public function create(): Response
     {
+        $leads = Lead::selectableForCampaigns();
+
         return Inertia::render('campaigns/Create', [
-            'leads' => Lead::selectableForCampaigns(),
+            'leads' => $leads,
+            'filterOptions' => Lead::filterOptionsFor($leads),
             'messageTemplates' => MessageTemplate::all(),
         ]);
     }

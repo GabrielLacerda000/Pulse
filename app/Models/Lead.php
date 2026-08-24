@@ -168,4 +168,19 @@ class Lead extends Model
             'cities' => static::query()->whereNotNull('city')->distinct()->orderBy('city')->pluck('city'),
         ];
     }
+
+    /**
+     * The distinct filter option values present within a given set of leads.
+     *
+     * @param  Collection<int, Lead>  $leads
+     * @return array{statuses: array<LeadStatus>, categories: Collection<int, string>, cities: Collection<int, string>}
+     */
+    public static function filterOptionsFor(Collection $leads): array
+    {
+        return [
+            'statuses' => LeadStatus::cases(),
+            'categories' => $leads->pluck('category')->filter()->unique()->sort()->values(),
+            'cities' => $leads->pluck('city')->filter()->unique()->sort()->values(),
+        ];
+    }
 }

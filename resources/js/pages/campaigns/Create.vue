@@ -1,19 +1,26 @@
 <script setup lang="ts">
 import { Form, Head, Link } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import CampaignLeadsField from '@/components/campaigns/CampaignLeadsField.vue';
 import CampaignMessagesField from '@/components/campaigns/CampaignMessagesField.vue';
 import Heading from '@/components/Heading.vue';
 import InputError from '@/components/InputError.vue';
+import LeadsFilterBar from '@/components/leads/LeadsFilterBar.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { dashboard } from '@/routes';
 import { index, store } from '@/routes/campaigns';
-import type { Lead, MessageTemplate } from '@/types';
+import type {
+    Lead,
+    LeadFilterOptions,
+    LeadFilters,
+    MessageTemplate,
+} from '@/types';
 
-defineProps<{
+const props = defineProps<{
     leads: Lead[];
+    filterOptions: LeadFilterOptions;
     messageTemplates: MessageTemplate[];
 }>();
 
@@ -29,6 +36,42 @@ defineOptions({
 
 const selectedLeadIds = ref<number[]>([]);
 const messages = ref<string[]>(['']);
+
+const leadFilters = reactive<
+    Pick<LeadFilters, 'search' | 'status' | 'category' | 'city'>
+>({
+    search: '',
+    status: '',
+    category: '',
+    city: '',
+});
+
+const filteredLeads = computed(() =>
+    props.leads.filter((lead) => {
+        if (
+            leadFilters.search &&
+            !lead.company_name
+                .toLowerCase()
+                .includes(leadFilters.search.toLowerCase())
+        ) {
+            return false;
+        }
+
+        if (leadFilters.status && lead.status !== leadFilters.status) {
+            return false;
+        }
+
+        if (leadFilters.category && lead.category !== leadFilters.category) {
+            return false;
+        }
+
+        if (leadFilters.city && lead.city !== leadFilters.city) {
+            return false;
+        }
+
+        return true;
+    }),
+);
 </script>
 
 <template>
@@ -88,9 +131,17 @@ const messages = ref<string[]>(['']);
                 </div>
             </div>
 
+            <LeadsFilterBar
+                v-model:search="leadFilters.search"
+                v-model:status="leadFilters.status"
+                v-model:category="leadFilters.category"
+                v-model:city="leadFilters.city"
+                :filter-options="filterOptions"
+            />
+
             <CampaignLeadsField
                 v-model="selectedLeadIds"
-                :leads="leads"
+                :leads="filteredLeads"
                 :error="errors.lead_ids"
             />
 
