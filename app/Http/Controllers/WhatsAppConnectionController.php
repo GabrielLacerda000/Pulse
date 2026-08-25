@@ -19,16 +19,15 @@ class WhatsAppConnectionController extends Controller
     {
         try {
             $status = $client->status();
+            $qr = $status->status === WhatsAppConnectionStatus::QR_REQUIRED
+                ? $client->qr()->qr
+                : null;
         } catch (PulseWppException $exception) {
             return Inertia::render('whatsapp/Show', [
                 'connection' => null,
                 'error' => $exception->getMessage(),
             ]);
         }
-
-        $qr = $status->status === WhatsAppConnectionStatus::QR_REQUIRED
-            ? $client->qr()->qr
-            : null;
 
         return Inertia::render('whatsapp/Show', [
             'connection' => [
