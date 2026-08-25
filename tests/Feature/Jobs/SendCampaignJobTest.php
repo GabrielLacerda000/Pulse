@@ -11,8 +11,11 @@ use App\Models\CampaignRecipient;
 use App\Models\Lead;
 use App\Models\User;
 use App\Services\PulseWppClient;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Sleep;
+use PDOException;
 
 beforeEach(function () {
     $this->actingAs(User::factory()->create());
@@ -98,6 +101,58 @@ test('a WHATSAPP_AUTH_REQUIRED error aborts the run immediately, leaving untried
     expect($recipientOne->fresh()->status)->toBe(CampaignRecipientStatus::PENDING);
     expect($recipientTwo->fresh()->status)->toBe(CampaignRecipientStatus::PENDING);
     expect($campaign->fresh()->status)->toBe(CampaignStatus::FAILED);
+});
+
+test('it retries a transient SQLite lock error when recording the outcome, then succeeds', function () {
+    Sleep::fake();
+    Http::fake(['pulse-wpp.test/messages' => Http::response(['success' => true, 'messageId' => 'abc'])]);
+
+    $campaign = Campaign::factory()->create(['status' => CampaignStatus::RUNNING]);
+    CampaignMessage::factory()->create(['campaign_id' => $campaign->id]);
+    $recipient = CampaignRecipient::factory()->create(['campaign_id' => $campaign->id]);
+
+    $attempts = 0;
+    CampaignRecipient::updating(function () use (&$attempts) {
+        $attempts++;
+
+        if ($attempts === 1) {
+            throw new QueryException('sqlite', 'update "campaign_recipients" ...', [], new PDOException('database is locked'));
+        }
+    });
+
+    (new SendCampaignJob($campaign))->handle(app(PulseWppClient::class), app(RenderMessageTemplateAction::class));
+
+    CampaignRecipient::flushEventListeners();
+
+    expect($attempts)->toBe(2);
+    expect($recipient->fresh()->status)->toBe(CampaignRecipientStatus::SENT);
+    expect($campaign->fresh()->status)->toBe(CampaignStatus::COMPLETED);
+});
+
+test('it logs and moves on to the next recipient when the database stays locked', function () {
+    Sleep::fake();
+    Http::fake(['pulse-wpp.test/messages' => Http::response(['success' => true, 'messageId' => 'abc'])]);
+    Log::spy();
+
+    $campaign = Campaign::factory()->create(['status' => CampaignStatus::RUNNING]);
+    CampaignMessage::factory()->create(['campaign_id' => $campaign->id]);
+    $recipientOne = CampaignRecipient::factory()->create(['campaign_id' => $campaign->id]);
+    $recipientTwo = CampaignRecipient::factory()->create(['campaign_id' => $campaign->id]);
+
+    CampaignRecipient::updating(function (CampaignRecipient $model) use ($recipientOne) {
+        if ($model->is($recipientOne)) {
+            throw new QueryException('sqlite', 'update "campaign_recipients" ...', [], new PDOException('database is locked'));
+        }
+    });
+
+    (new SendCampaignJob($campaign))->handle(app(PulseWppClient::class), app(RenderMessageTemplateAction::class));
+
+    CampaignRecipient::flushEventListeners();
+
+    expect($recipientOne->fresh()->status)->toBe(CampaignRecipientStatus::PENDING);
+    expect($recipientTwo->fresh()->status)->toBe(CampaignRecipientStatus::SENT);
+    expect($campaign->fresh()->status)->toBe(CampaignStatus::COMPLETED);
+    Log::shouldHaveReceived('error')->once();
 });
 
 test('a job that fails outright marks the campaign failed', function () {
