@@ -100,6 +100,21 @@ describe('as an authenticated user', function () {
         ['INTERNAL_ERROR', 500],
     ]);
 
+    test('shows a friendly error when pulse-wpp is offline/unreachable', function () {
+        Http::fake([
+            'pulse-wpp.test/whatsapp/status' => Http::failedConnection(),
+        ]);
+
+        $response = $this->get(route('whatsapp.show'));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('whatsapp/Show')
+            ->where('connection', null)
+            ->where('error', 'Não foi possível se conectar ao servidor do WhatsApp.')
+        );
+    });
+
     test('a user can trigger a connect', function () {
         Http::fake([
             'pulse-wpp.test/whatsapp/connect' => Http::response(['status' => 'qr_required']),
@@ -134,6 +149,17 @@ describe('as an authenticated user', function () {
         ['INTERNAL_ERROR', 500],
     ]);
 
+    test('a connect while pulse-wpp is offline/unreachable still redirects back with an error toast', function () {
+        Http::fake([
+            'pulse-wpp.test/whatsapp/connect' => Http::failedConnection(),
+        ]);
+
+        $response = $this->post(route('whatsapp.connect'));
+
+        $response->assertRedirect(route('whatsapp.show'));
+        $response->assertInertiaFlash('toast', ['type' => 'error', 'message' => 'Não foi possível se conectar ao servidor do WhatsApp.']);
+    });
+
     test('a user can trigger a disconnect', function () {
         Http::fake([
             'pulse-wpp.test/whatsapp/disconnect' => Http::response(['status' => 'disconnected']),
@@ -167,4 +193,15 @@ describe('as an authenticated user', function () {
         ['PROVIDER_UNAVAILABLE', 503],
         ['INTERNAL_ERROR', 500],
     ]);
+
+    test('a disconnect while pulse-wpp is offline/unreachable still redirects back with an error toast', function () {
+        Http::fake([
+            'pulse-wpp.test/whatsapp/disconnect' => Http::failedConnection(),
+        ]);
+
+        $response = $this->post(route('whatsapp.disconnect'));
+
+        $response->assertRedirect(route('whatsapp.show'));
+        $response->assertInertiaFlash('toast', ['type' => 'error', 'message' => 'Não foi possível se conectar ao servidor do WhatsApp.']);
+    });
 });

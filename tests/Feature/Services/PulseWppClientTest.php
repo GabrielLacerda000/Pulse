@@ -136,6 +136,19 @@ test('each stable error code is mapped to the local enum, never matched on error
     ['INTERNAL_ERROR', 500],
 ]);
 
+test('a connection failure (pulse-wpp offline/unreachable) is converted to a PulseWppException', function () {
+    Http::fake([
+        'pulse-wpp.test/whatsapp/status' => Http::failedConnection(),
+    ]);
+
+    try {
+        $this->client->status();
+        $this->fail('Expected a PulseWppException to be thrown.');
+    } catch (PulseWppException $exception) {
+        expect($exception->errorCode)->toBe(PulseWppErrorCode::PROVIDER_UNREACHABLE);
+    }
+});
+
 test('an unmapped error code falls back to INTERNAL_ERROR', function () {
     Http::fake([
         'pulse-wpp.test/whatsapp/status' => Http::response([

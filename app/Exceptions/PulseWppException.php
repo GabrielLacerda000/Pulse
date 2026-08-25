@@ -20,4 +20,12 @@ class PulseWppException extends RuntimeException
 
         return new self($code, (string) ($response->json('error.message') ?? 'pulse-wpp request failed.'));
     }
+
+    public static function unreachable(): self
+    {
+        return new self(
+            PulseWppErrorCode::PROVIDER_UNREACHABLE,
+            'Não foi possível se conectar ao servidor do WhatsApp.'
+        );
+    }
 }
