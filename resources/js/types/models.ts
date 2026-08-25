@@ -92,8 +92,19 @@ export type Campaign = {
     delay_min_seconds: number;
     delay_max_seconds: number;
     recipients_count: number;
+    sent_count: number;
+    failed_count: number;
     created_at: string;
     updated_at: string;
+};
+
+export type CampaignForEdit = {
+    id: number;
+    name: string;
+    delay_min_seconds: number;
+    delay_max_seconds: number;
+    lead_ids: number[];
+    messages: string[];
 };
 
 export type WhatsAppConnectionStatus =

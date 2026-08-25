@@ -62,4 +62,41 @@ class Campaign extends Model
     {
         return $this->hasMany(CampaignRecipient::class);
     }
+
+    /**
+     * A campaign's Leads, message pool, and interval can only be changed
+     * while it's still a draft — once sending starts, the snapshot is fixed.
+     */
+    public function isEditable(): bool
+    {
+        return $this->status === CampaignStatus::DRAFT;
+    }
+
+    /**
+     * A campaign can be deleted at any point except while it's running,
+     * since a send is actively in progress at that point.
+     */
+    public function isDeletable(): bool
+    {
+        return $this->status !== CampaignStatus::RUNNING;
+    }
+
+    /**
+     * The shape consumed by the campaigns/Edit page: the campaign's own
+     * fields plus the lead IDs and message contents from its current
+     * snapshot, so the edit form can be prefilled.
+     *
+     * @return array<string, mixed>
+     */
+    public function toEditPayload(): array
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'delay_min_seconds' => $this->delay_min_seconds,
+            'delay_max_seconds' => $this->delay_max_seconds,
+            'lead_ids' => $this->recipients()->pluck('lead_id')->filter()->values(),
+            'messages' => $this->messages()->pluck('content'),
+        ];
+    }
 }

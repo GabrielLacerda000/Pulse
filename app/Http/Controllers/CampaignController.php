@@ -3,8 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Actions\CreateCampaignAction;
+use App\Actions\UpdateCampaignAction;
 use App\Data\CampaignData;
+use App\Enums\CampaignRecipientStatus;
 use App\Http\Requests\StoreCampaignRequest;
+use App\Http\Requests\UpdateCampaignRequest;
 use App\Models\Campaign;
 use App\Models\Lead;
 use App\Models\MessageTemplate;
@@ -21,7 +24,11 @@ class CampaignController extends Controller
     {
         return Inertia::render('campaigns/Index', [
             'campaigns' => Campaign::query()
-                ->withCount('recipients')
+                ->withCount([
+                    'recipients',
+                    'recipients as sent_count' => fn ($query) => $query->where('status', CampaignRecipientStatus::SENT),
+                    'recipients as failed_count' => fn ($query) => $query->where('status', CampaignRecipientStatus::FAILED),
+                ])
                 ->latest()
                 ->paginate(15),
         ]);
@@ -49,6 +56,49 @@ class CampaignController extends Controller
         $campaign = $action->execute(CampaignData::from($request->validated()));
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Campanha ":name" criada.', ['name' => $campaign->name])]);
+
+        return to_route('campaigns.index');
+    }
+
+    /**
+     * Show the form for editing the specified campaign.
+     */
+    public function edit(Campaign $campaign): Response
+    {
+        abort_unless($campaign->isEditable(), 403);
+
+        $leads = Lead::selectableForCampaigns();
+
+        return Inertia::render('campaigns/Edit', [
+            'campaign' => $campaign->toEditPayload(),
+            'leads' => $leads,
+            'filterOptions' => Lead::filterOptionsFor($leads),
+            'messageTemplates' => MessageTemplate::all(),
+        ]);
+    }
+
+    /**
+     * Update the specified campaign in storage.
+     */
+    public function update(UpdateCampaignRequest $request, Campaign $campaign, UpdateCampaignAction $action): RedirectResponse
+    {
+        $action->execute($campaign, CampaignData::from($request->validated()));
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Campanha ":name" atualizada.', ['name' => $campaign->name])]);
+
+        return to_route('campaigns.index');
+    }
+
+    /**
+     * Remove the specified campaign from storage.
+     */
+    public function destroy(Campaign $campaign): RedirectResponse
+    {
+        abort_unless($campaign->isDeletable(), 403);
+
+        $campaign->delete();
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Campanha ":name" excluída.', ['name' => $campaign->name])]);
 
         return to_route('campaigns.index');
     }

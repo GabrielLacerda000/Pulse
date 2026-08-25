@@ -3,6 +3,8 @@
 use App\Enums\CampaignRecipientStatus;
 use App\Enums\CampaignStatus;
 use App\Models\Campaign;
+use App\Models\CampaignMessage;
+use App\Models\CampaignRecipient;
 use App\Models\Lead;
 use App\Models\User;
 
@@ -192,5 +194,127 @@ describe('as an authenticated user', function () {
 
         $response->assertInvalid(['lead_ids.0', 'lead_ids.1']);
         expect(Campaign::firstWhere('name', 'Campanha'))->toBeNull();
+    });
+
+    test('campaigns index reports final send/fail counts', function () {
+        $campaign = Campaign::factory()->create(['status' => CampaignStatus::COMPLETED]);
+        CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::SENT]);
+        CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::SENT]);
+        CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::FAILED]);
+
+        $response = $this->get(route('campaigns.index'));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('campaigns/Index')
+            ->where('campaigns.data.0.recipients_count', 3)
+            ->where('campaigns.data.0.sent_count', 2)
+            ->where('campaigns.data.0.failed_count', 1)
+        );
+    });
+
+    test('a draft campaign can be viewed for editing', function () {
+        $lead = Lead::factory()->create(['phone' => '5581999999999']);
+        $campaign = Campaign::factory()->create(['name' => 'Original']);
+        CampaignMessage::factory()->create(['campaign_id' => $campaign->id, 'content' => 'Olá!']);
+        CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'lead_id' => $lead->id]);
+
+        $response = $this->get(route('campaigns.edit', $campaign));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('campaigns/Edit')
+            ->where('campaign.id', $campaign->id)
+            ->where('campaign.name', 'Original')
+            ->where('campaign.messages.0', 'Olá!')
+            ->where('campaign.lead_ids.0', $lead->id)
+        );
+    });
+
+    test('a draft campaign can be updated', function () {
+        $oldLead = Lead::factory()->create(['phone' => '5581999999999']);
+        $newLead = Lead::factory()->create(['phone' => '5581988888888']);
+        $campaign = Campaign::factory()->create(['name' => 'Original']);
+        CampaignMessage::factory()->create(['campaign_id' => $campaign->id]);
+        CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'lead_id' => $oldLead->id]);
+
+        $response = $this->put(route('campaigns.update', $campaign), [
+            'name' => 'Atualizada',
+            'delay_min_seconds' => 45,
+            'delay_max_seconds' => 100,
+            'lead_ids' => [$newLead->id],
+            'messages' => ['Nova mensagem'],
+        ]);
+
+        $response->assertRedirect(route('campaigns.index'));
+
+        $campaign->refresh();
+        expect($campaign->name)->toBe('Atualizada');
+        expect($campaign->delay_min_seconds)->toBe(45);
+        expect($campaign->delay_max_seconds)->toBe(100);
+        expect($campaign->messages)->toHaveCount(1);
+        expect($campaign->messages->first()->content)->toBe('Nova mensagem');
+        expect($campaign->recipients)->toHaveCount(1);
+        expect($campaign->recipients->first()->lead_id)->toBe($newLead->id);
+    });
+
+    test('a draft campaign can be deleted', function () {
+        $campaign = Campaign::factory()->create();
+
+        $response = $this->delete(route('campaigns.destroy', $campaign));
+
+        $response->assertRedirect(route('campaigns.index'));
+        expect(Campaign::find($campaign->id))->toBeNull();
+    });
+
+    test('a completed campaign can be deleted', function () {
+        $campaign = Campaign::factory()->create(['status' => CampaignStatus::COMPLETED]);
+
+        $response = $this->delete(route('campaigns.destroy', $campaign));
+
+        $response->assertRedirect(route('campaigns.index'));
+        expect(Campaign::find($campaign->id))->toBeNull();
+    });
+
+    test('a failed campaign can be deleted', function () {
+        $campaign = Campaign::factory()->create(['status' => CampaignStatus::FAILED]);
+
+        $response = $this->delete(route('campaigns.destroy', $campaign));
+
+        $response->assertRedirect(route('campaigns.index'));
+        expect(Campaign::find($campaign->id))->toBeNull();
+    });
+
+    test('a running campaign cannot be edited', function () {
+        $campaign = Campaign::factory()->create(['status' => CampaignStatus::RUNNING]);
+
+        $response = $this->get(route('campaigns.edit', $campaign));
+
+        $response->assertForbidden();
+    });
+
+    test('a running campaign cannot be updated', function () {
+        $lead = Lead::factory()->create(['phone' => '5581999999999']);
+        $campaign = Campaign::factory()->create(['status' => CampaignStatus::RUNNING, 'name' => 'Original']);
+
+        $response = $this->put(route('campaigns.update', $campaign), [
+            'name' => 'Tentativa',
+            'delay_min_seconds' => 30,
+            'delay_max_seconds' => 60,
+            'lead_ids' => [$lead->id],
+            'messages' => ['Olá!'],
+        ]);
+
+        $response->assertForbidden();
+        expect($campaign->fresh()->name)->toBe('Original');
+    });
+
+    test('a running campaign cannot be deleted', function () {
+        $campaign = Campaign::factory()->create(['status' => CampaignStatus::RUNNING]);
+
+        $response = $this->delete(route('campaigns.destroy', $campaign));
+
+        $response->assertForbidden();
+        expect(Campaign::find($campaign->id))->not->toBeNull();
     });
 });

@@ -1,12 +1,13 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Plus } from '@lucide/vue';
+import { Pencil, Plus } from '@lucide/vue';
+import CampaignDeleteDialog from '@/components/campaigns/CampaignDeleteDialog.vue';
 import Heading from '@/components/Heading.vue';
 import LeadsPagination from '@/components/LeadsPagination.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { dashboard } from '@/routes';
-import { create, index } from '@/routes/campaigns';
+import { create, edit, index } from '@/routes/campaigns';
 import type { Campaign, Paginated } from '@/types';
 
 const props = defineProps<{
@@ -65,6 +66,9 @@ function goToPage(page: number) {
                         <th class="px-4 py-3 font-semibold">Nome</th>
                         <th class="px-4 py-3 font-semibold">Status</th>
                         <th class="px-4 py-3 font-semibold">Leads</th>
+                        <th class="px-4 py-3 font-semibold">Enviadas</th>
+                        <th class="px-4 py-3 font-semibold">Falhas</th>
+                        <th class="px-4 py-3 font-semibold"></th>
                     </tr>
                 </thead>
                 <tbody>
@@ -73,7 +77,7 @@ function goToPage(page: number) {
                         class="border-b border-border/60 last:border-b-0"
                     >
                         <td
-                            colspan="3"
+                            colspan="6"
                             class="px-4 py-8 text-center text-muted-foreground"
                         >
                             Nenhuma campanha cadastrada.
@@ -94,6 +98,36 @@ function goToPage(page: number) {
                         </td>
                         <td class="px-4 py-3 text-muted-foreground">
                             {{ campaign.recipients_count }}
+                        </td>
+                        <td class="px-4 py-3 text-muted-foreground">
+                            {{ campaign.sent_count }}
+                        </td>
+                        <td class="px-4 py-3 text-muted-foreground">
+                            {{ campaign.failed_count }}
+                        </td>
+                        <td class="px-4 py-3">
+                            <div
+                                v-if="campaign.status === 'draft'"
+                                class="flex items-center justify-end gap-1"
+                            >
+                                <Button
+                                    as-child
+                                    variant="ghost"
+                                    size="icon-sm"
+                                    title="Editar"
+                                >
+                                    <Link :href="edit(campaign.id)">
+                                        <Pencil class="size-4" />
+                                    </Link>
+                                </Button>
+                                <CampaignDeleteDialog :campaign="campaign" />
+                            </div>
+                            <div
+                                v-else-if="campaign.status !== 'running'"
+                                class="flex items-center justify-end"
+                            >
+                                <CampaignDeleteDialog :campaign="campaign" />
+                            </div>
                         </td>
                     </tr>
                 </tbody>
