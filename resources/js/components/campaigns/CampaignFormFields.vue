@@ -6,6 +6,7 @@ import InputError from '@/components/InputError.vue';
 import LeadsFilterBar from '@/components/leads/LeadsFilterBar.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { usePhoneMask } from '@/composables/usePhoneMask';
 import type {
     CampaignForEdit,
     Lead,
@@ -35,13 +36,16 @@ const selectedLeadIds = defineModel<number[]>('selectedLeadIds', {
 });
 const messages = defineModel<string[]>('messages', { default: () => [''] });
 
+const { stripPhoneDigits } = usePhoneMask();
+
 const leadFilters = reactive<
-    Pick<LeadFilters, 'search' | 'status' | 'category' | 'city'>
+    Pick<LeadFilters, 'search' | 'status' | 'category' | 'city' | 'phone'>
 >({
     search: '',
     status: '',
     category: '',
     city: '',
+    phone: '',
 });
 
 const filteredLeads = computed(() =>
@@ -64,6 +68,15 @@ const filteredLeads = computed(() =>
         }
 
         if (leadFilters.city && lead.city !== leadFilters.city) {
+            return false;
+        }
+
+        if (
+            leadFilters.phone &&
+            !stripPhoneDigits(lead.phone).includes(
+                stripPhoneDigits(leadFilters.phone),
+            )
+        ) {
             return false;
         }
 
@@ -119,6 +132,7 @@ const filteredLeads = computed(() =>
         v-model:status="leadFilters.status"
         v-model:category="leadFilters.category"
         v-model:city="leadFilters.city"
+        v-model:phone="leadFilters.phone"
         :filter-options="filterOptions"
     />
 

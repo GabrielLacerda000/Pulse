@@ -41,6 +41,7 @@ export type LeadFilters = {
     status?: LeadStatus | '';
     category?: string;
     city?: string;
+    phone?: string;
     sort?: LeadSortColumn | '';
     direction?: 'asc' | 'desc' | '';
 };

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Search, X } from '@lucide/vue';
+import { vMaska } from 'maska/vue';
 import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +11,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
+import { usePhoneMask } from '@/composables/usePhoneMask';
 import { LEAD_STATUS_LABELS } from '@/constants/leadStatus';
 import type { LeadFilterOptions, LeadFilters } from '@/types';
 
@@ -27,11 +29,15 @@ const category = defineModel<LeadFilters['category']>('category', {
     default: '',
 });
 const city = defineModel<LeadFilters['city']>('city', { default: '' });
+const phone = defineModel<LeadFilters['phone']>('phone', { default: '' });
+
+const { phoneMaskOptions } = usePhoneMask();
 
 const ALL_VALUE = 'all';
 
 const hasActiveFilters = computed(
-    () => !!(search.value || status.value || category.value || city.value),
+    () =>
+        !!(search.value || status.value || category.value || city.value || phone.value),
 );
 
 function clearFilters() {
@@ -39,6 +45,7 @@ function clearFilters() {
     status.value = '';
     category.value = '';
     city.value = '';
+    phone.value = '';
 }
 </script>
 
@@ -55,6 +62,14 @@ function clearFilters() {
                 class="rounded-full pl-9"
             />
         </div>
+
+        <Input
+            v-model="phone"
+            v-maska="phoneMaskOptions"
+            type="search"
+            placeholder="Buscar por telefone..."
+            class="w-full max-w-xs rounded-full"
+        />
 
         <Select
             :model-value="status || ALL_VALUE"

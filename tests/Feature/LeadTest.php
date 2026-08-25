@@ -306,6 +306,44 @@ describe('as an authenticated user', function () {
         );
     });
 
+    test('leads index can be filtered by phone regardless of formatting', function () {
+        Lead::factory()->create(['phone' => '(81) 99999-1234']);
+        Lead::factory()->create(['phone' => '5511988887777']);
+
+        $response = $this->get(route('leads.index', ['phone' => '999991234']));
+
+        $response->assertInertia(fn ($page) => $page
+            ->has('leads.data', 1)
+            ->where('leads.data.0.phone', '(81) 99999-1234')
+        );
+    });
+
+    test('leads index can be filtered by phone typed with a different mask than stored', function () {
+        Lead::factory()->create(['phone' => '81999991234']);
+        Lead::factory()->create(['phone' => '5511988887777']);
+
+        $response = $this->get(route('leads.index', ['phone' => '(81) 99999-1234']));
+
+        $response->assertInertia(fn ($page) => $page
+            ->has('leads.data', 1)
+            ->where('leads.data.0.phone', '81999991234')
+        );
+    });
+
+    test('leads index combines the phone filter with the company search filter', function () {
+        Lead::factory()->create(['company_name' => 'Clínica Sorriso', 'phone' => '81999991234']);
+        Lead::factory()->create(['company_name' => 'Restaurante Sabor', 'phone' => '81999991234']);
+        Lead::factory()->create(['company_name' => 'Clínica Sorriso', 'phone' => '5511988887777']);
+
+        $response = $this->get(route('leads.index', ['search' => 'Sorriso', 'phone' => '999991234']));
+
+        $response->assertInertia(fn ($page) => $page
+            ->has('leads.data', 1)
+            ->where('leads.data.0.company_name', 'Clínica Sorriso')
+            ->where('leads.data.0.phone', '81999991234')
+        );
+    });
+
     test('leads index can be sorted by score ascending', function () {
         Lead::factory()->create(['company_name' => 'Baixo Score', 'score' => 10]);
         Lead::factory()->create(['company_name' => 'Alto Score', 'score' => 90]);

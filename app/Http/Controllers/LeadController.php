@@ -27,7 +27,7 @@ class LeadController extends Controller
      */
     public function index(Request $request, RenderMessageTemplateAction $action): Response
     {
-        $filters = $request->only(['search', 'status', 'category', 'city', 'sort', 'direction']);
+        $filters = $request->only(['search', 'status', 'category', 'city', 'phone', 'sort', 'direction']);
         $templates = MessageTemplate::all();
 
         return Inertia::render('leads/Index', [
@@ -36,6 +36,7 @@ class LeadController extends Controller
                 ->filterStatus($filters['status'] ?? null)
                 ->filterCategory($filters['category'] ?? null)
                 ->filterCity($filters['city'] ?? null)
+                ->filterPhone($filters['phone'] ?? null)
                 ->sortBy($filters['sort'] ?? null, $filters['direction'] ?? null)
                 ->paginate(15)
                 ->through(fn (Lead $lead): Lead => $this->withRenderedMessageTemplates($lead, $templates, $action)),

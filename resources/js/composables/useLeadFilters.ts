@@ -22,6 +22,7 @@ export function useLeadFilters(
         status: initialFilters.status ?? '',
         category: initialFilters.category ?? '',
         city: initialFilters.city ?? '',
+        phone: initialFilters.phone ?? '',
         sort: initialFilters.sort ?? '',
         direction: initialFilters.direction ?? '',
     });
@@ -38,7 +39,7 @@ export function useLeadFilters(
     const applyFiltersDebounced = useDebounceFn(applyFilters, 300);
 
     watch(
-        () => filters.search,
+        [() => filters.search, () => filters.phone],
         () => applyFiltersDebounced(),
     );
 

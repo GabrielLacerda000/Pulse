@@ -129,6 +129,24 @@ class Lead extends Model
     }
 
     /**
+     * Filter leads by phone, matching on digits only so the search doesn't
+     * depend on the exact mask/formatting stored on the lead or typed by
+     * the user (e.g. "(81) 99999-9999" matches a search for "819999999").
+     */
+    public function scopeFilterPhone(Builder $query, ?string $phone): Builder
+    {
+        $digits = preg_replace('/\D+/', '', $phone ?? '') ?? '';
+
+        if ($digits === '') {
+            return $query;
+        }
+
+        $normalizedPhoneColumn = "REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(REPLACE(phone, ' ', ''), '-', ''), '(', ''), ')', ''), '+', ''), '.', '')";
+
+        return $query->whereRaw("{$normalizedPhoneColumn} LIKE ?", ['%'.$digits.'%']);
+    }
+
+    /**
      * Sort leads by an allowed column, defaulting to most recent first.
      */
     public function scopeSortBy(Builder $query, ?string $sort, ?string $direction): Builder
