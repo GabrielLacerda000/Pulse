@@ -2,13 +2,14 @@
 import { Head, router } from '@inertiajs/vue3';
 import { AlertTriangle, LogIn, LogOut } from '@lucide/vue';
 import QrcodeVue from 'qrcode.vue';
-import { onUnmounted } from 'vue';
+import { computed, onUnmounted } from 'vue';
 import Heading from '@/components/Heading.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
 import type { BadgeVariants } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { usePhoneMask } from '@/composables/usePhoneMask';
 import { dashboard } from '@/routes';
 import { connect, disconnect, show } from '@/routes/whatsapp';
 import type { WhatsAppConnection } from '@/types';
@@ -17,6 +18,16 @@ const props = defineProps<{
     connection: WhatsAppConnection | null;
     error: string | null;
 }>();
+
+const { formatPhoneDisplay } = usePhoneMask();
+
+const formattedPhone = computed(() => {
+    if (!props.connection?.phone) {
+        return '';
+    }
+
+    return `+55 ${formatPhoneDisplay(props.connection.phone)}`;
+});
 
 defineOptions({
     layout: {
@@ -112,7 +123,7 @@ function handleDisconnect() {
                 >
                     Número conectado:
                     <span class="font-medium text-foreground">{{
-                        props.connection.phone
+                        formattedPhone
                     }}</span>
                 </p>
 

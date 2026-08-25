@@ -34,7 +34,7 @@ defineOptions({
         breadcrumbs: [
             { title: 'Dashboard', href: dashboard() },
             { title: 'Campanhas', href: index() },
-            { title: props.campaign.name, href: '' },
+            { title: 'Progresso da campanha', href: '' },
         ],
     },
 });

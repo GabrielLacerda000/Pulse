@@ -2,21 +2,38 @@
 import { Head, Link } from '@inertiajs/vue3';
 import { Eye, Pencil, Plus } from '@lucide/vue';
 import CampaignDeleteDialog from '@/components/campaigns/CampaignDeleteDialog.vue';
+import CampaignStartDialog from '@/components/campaigns/CampaignStartDialog.vue';
 import CampaignsFilterBar from '@/components/campaigns/CampaignsFilterBar.vue';
 import Heading from '@/components/Heading.vue';
 import LeadsPagination from '@/components/LeadsPagination.vue';
 import { Badge } from '@/components/ui/badge';
+import type { BadgeVariants } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useCampaignFilters } from '@/composables/useCampaignFilters';
 import { CAMPAIGN_STATUS_LABELS } from '@/constants/campaignStatus';
 import { dashboard } from '@/routes';
 import { create, edit, index, show } from '@/routes/campaigns';
-import type { Campaign, CampaignFilters, Paginated } from '@/types';
+import type {
+    Campaign,
+    CampaignFilters,
+    CampaignStatus,
+    Paginated,
+} from '@/types';
 
 const props = defineProps<{
     campaigns: Paginated<Campaign>;
     filters: CampaignFilters;
 }>();
+
+const CAMPAIGN_STATUS_VARIANTS: Record<
+    CampaignStatus,
+    NonNullable<BadgeVariants['variant']>
+> = {
+    draft: 'secondary',
+    running: 'outline',
+    completed: 'default',
+    failed: 'destructive',
+};
 
 defineOptions({
     layout: {
@@ -88,7 +105,7 @@ const { filters, goToPage } = useCampaignFilters(props.filters);
                             {{ campaign.name }}
                         </td>
                         <td class="px-4 py-3">
-                            <Badge variant="secondary">{{
+                            <Badge :variant="CAMPAIGN_STATUS_VARIANTS[campaign.status]">{{
                                 CAMPAIGN_STATUS_LABELS[campaign.status]
                             }}</Badge>
                         </td>
@@ -106,6 +123,7 @@ const { filters, goToPage } = useCampaignFilters(props.filters);
                                 v-if="campaign.status === 'draft'"
                                 class="flex items-center gap-1"
                             >
+                                <CampaignStartDialog :campaign="campaign" />
                                 <Button
                                     as-child
                                     variant="ghost"
