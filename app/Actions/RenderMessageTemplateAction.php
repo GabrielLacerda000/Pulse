@@ -27,11 +27,21 @@ final class RenderMessageTemplateAction
      */
     public function execute(MessageTemplate $template, Lead $lead): string
     {
+        return $this->renderContent($template->content, $lead);
+    }
+
+    /**
+     * Substitute variables in a raw content string with the given Lead's
+     * data. Shared by execute() and by callers rendering a CampaignMessage,
+     * which is not a MessageTemplate.
+     */
+    public function renderContent(string $content, Lead $lead): string
+    {
         return preg_replace_callback(
             '/\{(\w+)\}/',
             fn (array $matches): string => $this->resolve($matches[1], $lead),
-            $template->content,
-        ) ?? $template->content;
+            $content,
+        ) ?? $content;
     }
 
     /**

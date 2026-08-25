@@ -3,9 +3,11 @@
 namespace App\Http\Controllers;
 
 use App\Actions\CreateCampaignAction;
+use App\Actions\StartCampaignAction;
 use App\Actions\UpdateCampaignAction;
 use App\Data\CampaignData;
 use App\Enums\CampaignRecipientStatus;
+use App\Exceptions\CampaignStartBlockedException;
 use App\Http\Requests\StoreCampaignRequest;
 use App\Http\Requests\UpdateCampaignRequest;
 use App\Models\Campaign;
@@ -85,6 +87,26 @@ class CampaignController extends Controller
         $action->execute($campaign, CampaignData::from($request->validated()));
 
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Campanha ":name" atualizada.', ['name' => $campaign->name])]);
+
+        return to_route('campaigns.index');
+    }
+
+    /**
+     * Start the specified campaign's send.
+     */
+    public function start(Campaign $campaign, StartCampaignAction $action): RedirectResponse
+    {
+        abort_unless($campaign->isStartable(), 403);
+
+        try {
+            $action->execute($campaign);
+        } catch (CampaignStartBlockedException $exception) {
+            Inertia::flash('toast', ['type' => 'error', 'message' => $exception->getMessage()]);
+
+            return to_route('campaigns.index');
+        }
+
+        Inertia::flash('toast', ['type' => 'success', 'message' => __('Campanha ":name" iniciada.', ['name' => $campaign->name])]);
 
         return to_route('campaigns.index');
     }

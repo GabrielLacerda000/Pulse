@@ -2,11 +2,14 @@
 
 use App\Enums\CampaignRecipientStatus;
 use App\Enums\CampaignStatus;
+use App\Jobs\SendCampaignJob;
 use App\Models\Campaign;
 use App\Models\CampaignMessage;
 use App\Models\CampaignRecipient;
 use App\Models\Lead;
 use App\Models\User;
+use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Queue;
 
 test('guests are redirected to the login page', function () {
     $response = $this->get(route('campaigns.index'));
@@ -316,5 +319,86 @@ describe('as an authenticated user', function () {
 
         $response->assertForbidden();
         expect(Campaign::find($campaign->id))->not->toBeNull();
+    });
+
+    test('starting a draft campaign dispatches the sender job and marks it running', function () {
+        Queue::fake();
+        Http::fake([
+            'pulse-wpp.test/whatsapp/status' => Http::response(['status' => 'connected', 'phone' => '5582999999999']),
+        ]);
+        $campaign = Campaign::factory()->create(['status' => CampaignStatus::DRAFT, 'name' => 'Lançamento']);
+
+        $response = $this->post(route('campaigns.start', $campaign));
+
+        $response->assertRedirect(route('campaigns.index'));
+        $response->assertInertiaFlash('toast', ['type' => 'success', 'message' => 'Campanha "Lançamento" iniciada.']);
+        expect($campaign->fresh()->status)->toBe(CampaignStatus::RUNNING);
+        Queue::assertPushed(SendCampaignJob::class, fn ($job) => $job->campaign->is($campaign));
+    });
+
+    test('starting a campaign is blocked while another owned campaign is already running', function () {
+        Queue::fake();
+        Campaign::factory()->create(['status' => CampaignStatus::RUNNING]);
+        $draft = Campaign::factory()->create(['status' => CampaignStatus::DRAFT]);
+
+        $response = $this->post(route('campaigns.start', $draft));
+
+        $response->assertRedirect(route('campaigns.index'));
+        $response->assertInertiaFlash('toast', ['type' => 'error', 'message' => 'Você já tem uma campanha em andamento. Aguarde ela terminar antes de iniciar outra.']);
+        expect($draft->fresh()->status)->toBe(CampaignStatus::DRAFT);
+        Queue::assertNotPushed(SendCampaignJob::class);
+    });
+
+    test('starting a campaign is blocked when whatsapp is not connected', function () {
+        Queue::fake();
+        Http::fake([
+            'pulse-wpp.test/whatsapp/status' => Http::response(['status' => 'disconnected']),
+        ]);
+        $campaign = Campaign::factory()->create(['status' => CampaignStatus::DRAFT]);
+
+        $response = $this->post(route('campaigns.start', $campaign));
+
+        $response->assertRedirect(route('campaigns.index'));
+        $response->assertInertiaFlash('toast', ['type' => 'error', 'message' => 'Conecte o WhatsApp antes de iniciar a campanha.']);
+        expect($campaign->fresh()->status)->toBe(CampaignStatus::DRAFT);
+        Queue::assertNotPushed(SendCampaignJob::class);
+    });
+
+    test('starting a campaign is blocked when pulse-wpp is unreachable', function () {
+        Queue::fake();
+        Http::fake([
+            'pulse-wpp.test/whatsapp/status' => Http::response([
+                'success' => false,
+                'error' => ['code' => 'PROVIDER_UNAVAILABLE', 'message' => 'error: PROVIDER_UNAVAILABLE'],
+            ], 503),
+        ]);
+        $campaign = Campaign::factory()->create(['status' => CampaignStatus::DRAFT]);
+
+        $response = $this->post(route('campaigns.start', $campaign));
+
+        $response->assertRedirect(route('campaigns.index'));
+        $response->assertInertiaFlash('toast', ['type' => 'error', 'message' => 'Conecte o WhatsApp antes de iniciar a campanha.']);
+        expect($campaign->fresh()->status)->toBe(CampaignStatus::DRAFT);
+        Queue::assertNotPushed(SendCampaignJob::class);
+    });
+
+    test('a running campaign cannot be started again', function () {
+        Queue::fake();
+        $campaign = Campaign::factory()->create(['status' => CampaignStatus::RUNNING]);
+
+        $response = $this->post(route('campaigns.start', $campaign));
+
+        $response->assertForbidden();
+        Queue::assertNotPushed(SendCampaignJob::class);
+    });
+
+    test('a completed campaign cannot be started again', function () {
+        Queue::fake();
+        $campaign = Campaign::factory()->create(['status' => CampaignStatus::COMPLETED]);
+
+        $response = $this->post(route('campaigns.start', $campaign));
+
+        $response->assertForbidden();
+        Queue::assertNotPushed(SendCampaignJob::class);
     });
 });

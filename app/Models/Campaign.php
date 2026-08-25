@@ -82,6 +82,16 @@ class Campaign extends Model
     }
 
     /**
+     * A campaign can only be started from draft — once it's running,
+     * completed, or failed, starting it again would re-send to recipients
+     * that already have an outcome.
+     */
+    public function isStartable(): bool
+    {
+        return $this->status === CampaignStatus::DRAFT;
+    }
+
+    /**
      * The shape consumed by the campaigns/Edit page: the campaign's own
      * fields plus the lead IDs and message contents from its current
      * snapshot, so the edit form can be prefilled.
