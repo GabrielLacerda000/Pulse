@@ -35,6 +35,11 @@ const CAMPAIGN_STATUS_VARIANTS: Record<
     failed: 'destructive',
 };
 
+const CAMPAIGN_STATUS_CLASSES: Partial<Record<CampaignStatus, string>> = {
+    completed:
+        'border-transparent bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400',
+};
+
 defineOptions({
     layout: {
         breadcrumbs: [
@@ -105,7 +110,10 @@ const { filters, goToPage } = useCampaignFilters(props.filters);
                             {{ campaign.name }}
                         </td>
                         <td class="px-4 py-3">
-                            <Badge :variant="CAMPAIGN_STATUS_VARIANTS[campaign.status]">{{
+                            <Badge
+                                :variant="CAMPAIGN_STATUS_VARIANTS[campaign.status]"
+                                :class="CAMPAIGN_STATUS_CLASSES[campaign.status]"
+                            >{{
                                 CAMPAIGN_STATUS_LABELS[campaign.status]
                             }}</Badge>
                         </td>
