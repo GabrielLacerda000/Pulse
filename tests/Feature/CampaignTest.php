@@ -51,6 +51,62 @@ describe('as an authenticated user', function () {
         );
     });
 
+    test('campaigns index filters by name search', function () {
+        Campaign::factory()->create(['name' => 'Campanha de lançamento']);
+        Campaign::factory()->create(['name' => 'Outra campanha']);
+
+        $response = $this->get(route('campaigns.index', ['search' => 'lançamento']));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('campaigns/Index')
+            ->has('campaigns.data', 1)
+            ->where('campaigns.data.0.name', 'Campanha de lançamento')
+        );
+    });
+
+    test('campaigns index filters by status', function () {
+        Campaign::factory()->create(['status' => CampaignStatus::DRAFT]);
+        Campaign::factory()->create(['status' => CampaignStatus::COMPLETED]);
+
+        $response = $this->get(route('campaigns.index', ['status' => 'completed']));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('campaigns/Index')
+            ->has('campaigns.data', 1)
+            ->where('campaigns.data.0.status', 'completed')
+        );
+    });
+
+    test('campaigns index combines search and status filters', function () {
+        Campaign::factory()->create(['name' => 'Campanha X', 'status' => CampaignStatus::DRAFT]);
+        Campaign::factory()->create(['name' => 'Campanha X', 'status' => CampaignStatus::COMPLETED]);
+        Campaign::factory()->create(['name' => 'Outra', 'status' => CampaignStatus::DRAFT]);
+
+        $response = $this->get(route('campaigns.index', ['search' => 'Campanha X', 'status' => 'draft']));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('campaigns/Index')
+            ->has('campaigns.data', 1)
+        );
+    });
+
+    test('campaigns index with no filters returns all the user\'s campaigns, most recent first', function () {
+        Campaign::factory()->create(['name' => 'Primeira', 'created_at' => now()->subMinute()]);
+        Campaign::factory()->create(['name' => 'Segunda', 'created_at' => now()]);
+
+        $response = $this->get(route('campaigns.index'));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('campaigns/Index')
+            ->has('campaigns.data', 2)
+            ->where('campaigns.data.0.name', 'Segunda')
+        );
+    });
+
     test('the create page only lists leads whose phone is valid for WhatsApp', function () {
         $withPhone = Lead::factory()->create(['phone' => '5581999999999']);
         Lead::factory()->create(['phone' => null]);

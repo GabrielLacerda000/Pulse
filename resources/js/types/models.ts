@@ -98,6 +98,11 @@ export type Campaign = {
     updated_at: string;
 };
 
+export type CampaignFilters = {
+    search?: string;
+    status?: CampaignStatus | '';
+};
+
 export type CampaignProgress = {
     sent: number;
     failed: number;

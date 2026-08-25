@@ -7,6 +7,7 @@ use App\Enums\CampaignStatus;
 use App\Models\Scopes\CampaignOwnerScope;
 use Database\Factories\CampaignFactory;
 use Illuminate\Database\Eloquent\Attributes\ScopedBy;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -62,6 +63,30 @@ class Campaign extends Model
     public function recipients(): HasMany
     {
         return $this->hasMany(CampaignRecipient::class);
+    }
+
+    /**
+     * Filter campaigns by free text matching the name.
+     */
+    public function scopeSearch(Builder $query, ?string $search): Builder
+    {
+        if (! $search) {
+            return $query;
+        }
+
+        return $query->where('name', 'like', '%'.$search.'%');
+    }
+
+    /**
+     * Filter campaigns by status.
+     */
+    public function scopeFilterStatus(Builder $query, ?string $status): Builder
+    {
+        if (! $status) {
+            return $query;
+        }
+
+        return $query->where('status', $status);
     }
 
     /**

@@ -1,17 +1,21 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import { Eye, Pencil, Plus } from '@lucide/vue';
 import CampaignDeleteDialog from '@/components/campaigns/CampaignDeleteDialog.vue';
+import CampaignsFilterBar from '@/components/campaigns/CampaignsFilterBar.vue';
 import Heading from '@/components/Heading.vue';
 import LeadsPagination from '@/components/LeadsPagination.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { useCampaignFilters } from '@/composables/useCampaignFilters';
+import { CAMPAIGN_STATUS_LABELS } from '@/constants/campaignStatus';
 import { dashboard } from '@/routes';
 import { create, edit, index, show } from '@/routes/campaigns';
-import type { Campaign, Paginated } from '@/types';
+import type { Campaign, CampaignFilters, Paginated } from '@/types';
 
 const props = defineProps<{
     campaigns: Paginated<Campaign>;
+    filters: CampaignFilters;
 }>();
 
 defineOptions({
@@ -23,20 +27,7 @@ defineOptions({
     },
 });
 
-const STATUS_LABELS: Record<Campaign['status'], string> = {
-    draft: 'Rascunho',
-    running: 'Em andamento',
-    completed: 'Concluída',
-    failed: 'Falhou',
-};
-
-function goToPage(page: number) {
-    router.get(
-        index.url(),
-        { page },
-        { preserveState: true, preserveScroll: true, replace: true },
-    );
-}
+const { filters, goToPage } = useCampaignFilters(props.filters);
 </script>
 
 <template>
@@ -57,6 +48,11 @@ function goToPage(page: number) {
             </Button>
         </div>
 
+        <CampaignsFilterBar
+            v-model:search="filters.search"
+            v-model:status="filters.status"
+        />
+
         <div class="overflow-x-auto rounded-xl border border-border">
             <table class="w-full text-left text-sm">
                 <thead>
@@ -68,7 +64,7 @@ function goToPage(page: number) {
                         <th class="px-4 py-3 font-semibold">Leads</th>
                         <th class="px-4 py-3 font-semibold">Enviadas</th>
                         <th class="px-4 py-3 font-semibold">Falhas</th>
-                        <th class="px-4 py-3 font-semibold"></th>
+                        <th class="px-4 py-3 font-semibold">Ações</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -93,7 +89,7 @@ function goToPage(page: number) {
                         </td>
                         <td class="px-4 py-3">
                             <Badge variant="secondary">{{
-                                STATUS_LABELS[campaign.status]
+                                CAMPAIGN_STATUS_LABELS[campaign.status]
                             }}</Badge>
                         </td>
                         <td class="px-4 py-3 text-muted-foreground">
@@ -108,7 +104,7 @@ function goToPage(page: number) {
                         <td class="px-4 py-3">
                             <div
                                 v-if="campaign.status === 'draft'"
-                                class="flex items-center justify-end gap-1"
+                                class="flex items-center gap-1"
                             >
                                 <Button
                                     as-child
@@ -124,7 +120,7 @@ function goToPage(page: number) {
                             </div>
                             <div
                                 v-else
-                                class="flex items-center justify-end gap-1"
+                                class="flex items-center gap-1"
                             >
                                 <Button
                                     as-child

@@ -6,6 +6,7 @@ import CampaignProgressBar from '@/components/campaigns/CampaignProgressBar.vue'
 import Heading from '@/components/Heading.vue';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CAMPAIGN_STATUS_LABELS } from '@/constants/campaignStatus';
 import { dashboard } from '@/routes';
 import { index } from '@/routes/campaigns';
 import type { CampaignProgress, FailedCampaignRecipient } from '@/types';
@@ -29,13 +30,6 @@ defineOptions({
         ],
     },
 });
-
-const STATUS_LABELS: Record<CampaignProgress['status'], string> = {
-    draft: 'Rascunho',
-    running: 'Em andamento',
-    completed: 'Concluída',
-    failed: 'Falhou',
-};
 
 const currentStatus = ref(props.campaign.status);
 const liveProgress = ref<CampaignProgress>(props.progress);
@@ -61,7 +55,7 @@ function handleProgressUpdate(data: CampaignProgress) {
                 description="Progresso do disparo da campanha"
             />
             <Badge :variant="currentStatus === 'failed' ? 'destructive' : 'secondary'">
-                {{ STATUS_LABELS[currentStatus] }}
+                {{ CAMPAIGN_STATUS_LABELS[currentStatus] }}
             </Badge>
         </div>
 

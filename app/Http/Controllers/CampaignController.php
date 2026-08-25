@@ -15,6 +15,7 @@ use App\Models\Lead;
 use App\Models\MessageTemplate;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -23,10 +24,14 @@ class CampaignController extends Controller
     /**
      * Display a listing of the campaigns.
      */
-    public function index(): Response
+    public function index(Request $request): Response
     {
+        $filters = $request->only(['search', 'status']);
+
         return Inertia::render('campaigns/Index', [
             'campaigns' => Campaign::query()
+                ->search($filters['search'] ?? null)
+                ->filterStatus($filters['status'] ?? null)
                 ->withCount([
                     'recipients',
                     'recipients as sent_count' => fn ($query) => $query->where('status', CampaignRecipientStatus::SENT),
@@ -34,6 +39,7 @@ class CampaignController extends Controller
                 ])
                 ->latest()
                 ->paginate(15),
+            'filters' => $filters,
         ]);
     }
 
