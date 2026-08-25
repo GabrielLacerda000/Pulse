@@ -98,6 +98,21 @@ export type Campaign = {
     updated_at: string;
 };
 
+export type CampaignProgress = {
+    sent: number;
+    failed: number;
+    pending: number;
+    total: number;
+    status: CampaignStatus;
+};
+
+export type FailedCampaignRecipient = {
+    id: number;
+    company_name: string;
+    phone: string;
+    error_code: string | null;
+};
+
 export type CampaignForEdit = {
     id: number;
     name: string;

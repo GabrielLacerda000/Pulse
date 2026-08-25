@@ -1,13 +1,13 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import { Pencil, Plus } from '@lucide/vue';
+import { Eye, Pencil, Plus } from '@lucide/vue';
 import CampaignDeleteDialog from '@/components/campaigns/CampaignDeleteDialog.vue';
 import Heading from '@/components/Heading.vue';
 import LeadsPagination from '@/components/LeadsPagination.vue';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { dashboard } from '@/routes';
-import { create, edit, index } from '@/routes/campaigns';
+import { create, edit, index, show } from '@/routes/campaigns';
 import type { Campaign, Paginated } from '@/types';
 
 const props = defineProps<{
@@ -123,10 +123,23 @@ function goToPage(page: number) {
                                 <CampaignDeleteDialog :campaign="campaign" />
                             </div>
                             <div
-                                v-else-if="campaign.status !== 'running'"
-                                class="flex items-center justify-end"
+                                v-else
+                                class="flex items-center justify-end gap-1"
                             >
-                                <CampaignDeleteDialog :campaign="campaign" />
+                                <Button
+                                    as-child
+                                    variant="ghost"
+                                    size="icon-sm"
+                                    title="Ver progresso"
+                                >
+                                    <Link :href="show(campaign.id)">
+                                        <Eye class="size-4" />
+                                    </Link>
+                                </Button>
+                                <CampaignDeleteDialog
+                                    v-if="campaign.status !== 'running'"
+                                    :campaign="campaign"
+                                />
                             </div>
                         </td>
                     </tr>

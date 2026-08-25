@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\CampaignRecipientStatus;
 use App\Enums\CampaignStatus;
 use App\Models\Scopes\CampaignOwnerScope;
 use Database\Factories\CampaignFactory;
@@ -89,6 +90,46 @@ class Campaign extends Model
     public function isStartable(): bool
     {
         return $this->status === CampaignStatus::DRAFT;
+    }
+
+    /**
+     * The recipient send counters plus the campaign's own status, as
+     * consumed by the campaigns/{campaign}/progress endpoint.
+     *
+     * @return array{sent: int, failed: int, pending: int, total: int, status: CampaignStatus}
+     */
+    public function progressCounts(): array
+    {
+        $counts = $this->recipients()
+            ->selectRaw('status, count(*) as aggregate')
+            ->groupBy('status')
+            ->pluck('aggregate', 'status');
+
+        $sent = (int) ($counts[CampaignRecipientStatus::SENT->value] ?? 0);
+        $failed = (int) ($counts[CampaignRecipientStatus::FAILED->value] ?? 0);
+        $pending = (int) ($counts[CampaignRecipientStatus::PENDING->value] ?? 0);
+
+        return [
+            'sent' => $sent,
+            'failed' => $failed,
+            'pending' => $pending,
+            'total' => $sent + $failed + $pending,
+            'status' => $this->status,
+        ];
+    }
+
+    /**
+     * The shape consumed by the campaigns/Show page's own campaign prop.
+     *
+     * @return array{id: int, name: string, status: CampaignStatus}
+     */
+    public function toShowPayload(): array
+    {
+        return [
+            'id' => $this->id,
+            'name' => $this->name,
+            'status' => $this->status,
+        ];
     }
 
     /**

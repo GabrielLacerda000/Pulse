@@ -13,6 +13,7 @@ use App\Http\Requests\UpdateCampaignRequest;
 use App\Models\Campaign;
 use App\Models\Lead;
 use App\Models\MessageTemplate;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -60,6 +61,29 @@ class CampaignController extends Controller
         Inertia::flash('toast', ['type' => 'success', 'message' => __('Campanha ":name" criada.', ['name' => $campaign->name])]);
 
         return to_route('campaigns.index');
+    }
+
+    /**
+     * Display a running, completed, or failed campaign's send progress.
+     */
+    public function show(Campaign $campaign): Response
+    {
+        return Inertia::render('campaigns/Show', [
+            'campaign' => $campaign->toShowPayload(),
+            'progress' => $campaign->progressCounts(),
+            'failedRecipients' => $campaign->recipients()
+                ->where('status', CampaignRecipientStatus::FAILED)
+                ->get(['id', 'company_name', 'phone', 'error_code']),
+        ]);
+    }
+
+    /**
+     * The recipient counters and status behind a campaign's progress bar,
+     * polled by the show page while the campaign is running.
+     */
+    public function progress(Campaign $campaign): JsonResponse
+    {
+        return response()->json($campaign->progressCounts());
     }
 
     /**

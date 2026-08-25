@@ -382,6 +382,91 @@ describe('as an authenticated user', function () {
         Queue::assertNotPushed(SendCampaignJob::class);
     });
 
+    test('the progress endpoint returns recipient counters and status for a running campaign', function () {
+        $campaign = Campaign::factory()->create(['status' => CampaignStatus::RUNNING]);
+        CampaignRecipient::factory()->count(2)->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::SENT]);
+        CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::FAILED]);
+        CampaignRecipient::factory()->count(3)->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::PENDING]);
+
+        $response = $this->getJson(route('campaigns.progress', $campaign));
+
+        $response->assertOk();
+        $response->assertJson([
+            'sent' => 2,
+            'failed' => 1,
+            'pending' => 3,
+            'total' => 6,
+            'status' => 'running',
+        ]);
+    });
+
+    test('the progress endpoint reflects a campaign with no recipients', function () {
+        $campaign = Campaign::factory()->create(['status' => CampaignStatus::DRAFT]);
+
+        $response = $this->getJson(route('campaigns.progress', $campaign));
+
+        $response->assertOk();
+        $response->assertJson([
+            'sent' => 0,
+            'failed' => 0,
+            'pending' => 0,
+            'total' => 0,
+            'status' => 'draft',
+        ]);
+    });
+
+    test('a running campaign show page renders without the final summary', function () {
+        $campaign = Campaign::factory()->create(['status' => CampaignStatus::RUNNING, 'name' => 'Lançamento']);
+        CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::SENT]);
+        CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::PENDING]);
+
+        $response = $this->get(route('campaigns.show', $campaign));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('campaigns/Show')
+            ->where('campaign.status', 'running')
+            ->where('progress.sent', 1)
+            ->where('progress.pending', 1)
+            ->where('progress.total', 2)
+            ->where('failedRecipients', [])
+        );
+    });
+
+    test('a completed campaign show page renders the final summary with failed recipient error codes', function () {
+        $campaign = Campaign::factory()->create(['status' => CampaignStatus::COMPLETED, 'name' => 'Lançamento']);
+        CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::SENT]);
+        CampaignRecipient::factory()->create([
+            'campaign_id' => $campaign->id,
+            'status' => CampaignRecipientStatus::FAILED,
+            'error_code' => 'MESSAGE_SEND_FAILED',
+        ]);
+
+        $response = $this->get(route('campaigns.show', $campaign));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('campaigns/Show')
+            ->where('campaign.status', 'completed')
+            ->where('progress.sent', 1)
+            ->where('progress.failed', 1)
+            ->has('failedRecipients', 1)
+            ->where('failedRecipients.0.error_code', 'MESSAGE_SEND_FAILED')
+        );
+    });
+
+    test('a failed campaign show page renders the final summary', function () {
+        $campaign = Campaign::factory()->create(['status' => CampaignStatus::FAILED]);
+
+        $response = $this->get(route('campaigns.show', $campaign));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('campaigns/Show')
+            ->where('campaign.status', 'failed')
+        );
+    });
+
     test('a running campaign cannot be started again', function () {
         Queue::fake();
         $campaign = Campaign::factory()->create(['status' => CampaignStatus::RUNNING]);

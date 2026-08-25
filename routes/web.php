@@ -28,7 +28,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     Route::resource('message-templates', MessageTemplateController::class)->except('show');
 
-    Route::resource('campaigns', CampaignController::class)->only(['index', 'create', 'store', 'edit', 'update', 'destroy']);
+    Route::resource('campaigns', CampaignController::class)->only(['index', 'show', 'create', 'store', 'edit', 'update', 'destroy']);
+    Route::get('campaigns/{campaign}/progress', [CampaignController::class, 'progress'])->name('campaigns.progress');
     Route::post('campaigns/{campaign}/start', [CampaignController::class, 'start'])->name('campaigns.start');
 
     Route::get('whatsapp', [WhatsAppConnectionController::class, 'show'])->name('whatsapp.show');
