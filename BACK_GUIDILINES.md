@@ -354,7 +354,7 @@ A regra é:
 
 # 11. Exceptions
 
-Exceptions devem representar situações excepcionais.
+Exceptions devem representar situações excepcionais ou condições de erro que interrompem a operação atual. Não devem ser utilizadas como mecanismo de controle de fluxo normal.
 
 Não utilizar exceptions como fluxo normal da aplicação.
 
@@ -454,7 +454,6 @@ em todos os controllers.
 
 Isso pode esconder bugs e dificultar debugging.
 
-Erros conhecidos devem ser representados de forma explícita.
 
 ---
 
