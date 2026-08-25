@@ -113,6 +113,7 @@ export type CampaignProgress = {
 
 export type FailedCampaignRecipient = {
     id: number;
+    lead_id: number | null;
     company_name: string;
     phone: string;
     error_code: string | null;

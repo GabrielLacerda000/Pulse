@@ -144,9 +144,20 @@ class Campaign extends Model
     }
 
     /**
+     * A completed campaign with at least one failed recipient can be
+     * retried: the user is offered a shortcut into a brand new campaign
+     * pre-filled with just those failed recipients' Leads.
+     */
+    public function canRetryFailed(): bool
+    {
+        return $this->status === CampaignStatus::COMPLETED
+            && $this->recipients()->where('status', CampaignRecipientStatus::FAILED)->exists();
+    }
+
+    /**
      * The shape consumed by the campaigns/Show page's own campaign prop.
      *
-     * @return array{id: int, name: string, status: CampaignStatus}
+     * @return array{id: int, name: string, status: CampaignStatus, can_retry_failed: bool}
      */
     public function toShowPayload(): array
     {
@@ -154,6 +165,7 @@ class Campaign extends Model
             'id' => $this->id,
             'name' => $this->name,
             'status' => $this->status,
+            'can_retry_failed' => $this->canRetryFailed(),
         ];
     }
 

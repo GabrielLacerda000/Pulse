@@ -8,10 +8,11 @@ import { dashboard } from '@/routes';
 import { index, store } from '@/routes/campaigns';
 import type { Lead, LeadFilterOptions, MessageTemplate } from '@/types';
 
-defineProps<{
+const props = defineProps<{
     leads: Lead[];
     filterOptions: LeadFilterOptions;
     messageTemplates: MessageTemplate[];
+    preselectedLeadIds: number[];
 }>();
 
 defineOptions({
@@ -24,7 +25,7 @@ defineOptions({
     },
 });
 
-const selectedLeadIds = ref<number[]>([]);
+const selectedLeadIds = ref<number[]>([...props.preselectedLeadIds]);
 const messages = ref<string[]>(['']);
 </script>
 

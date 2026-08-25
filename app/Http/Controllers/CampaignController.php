@@ -46,7 +46,7 @@ class CampaignController extends Controller
     /**
      * Show the form for creating a new campaign.
      */
-    public function create(): Response
+    public function create(Request $request): Response
     {
         $leads = Lead::selectableForCampaigns();
 
@@ -54,6 +54,7 @@ class CampaignController extends Controller
             'leads' => $leads,
             'filterOptions' => Lead::filterOptionsFor($leads),
             'messageTemplates' => MessageTemplate::all(),
+            'preselectedLeadIds' => Lead::preselectedIdsFrom($leads, $request->query('lead_ids', [])),
         ]);
     }
 
@@ -79,7 +80,7 @@ class CampaignController extends Controller
             'progress' => $campaign->progressCounts(),
             'failedRecipients' => $campaign->recipients()
                 ->where('status', CampaignRecipientStatus::FAILED)
-                ->get(['id', 'company_name', 'phone', 'error_code']),
+                ->get(['id', 'lead_id', 'company_name', 'phone', 'error_code']),
         ]);
     }
 

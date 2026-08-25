@@ -523,6 +523,57 @@ describe('as an authenticated user', function () {
         );
     });
 
+    test('a completed campaign show page exposes whether it can be retried', function () {
+        $completedWithoutFailures = Campaign::factory()->create(['status' => CampaignStatus::COMPLETED]);
+        CampaignRecipient::factory()->create(['campaign_id' => $completedWithoutFailures->id, 'status' => CampaignRecipientStatus::SENT]);
+
+        $completedWithFailures = Campaign::factory()->create(['status' => CampaignStatus::COMPLETED]);
+        CampaignRecipient::factory()->create(['campaign_id' => $completedWithFailures->id, 'status' => CampaignRecipientStatus::FAILED]);
+
+        $running = Campaign::factory()->create(['status' => CampaignStatus::RUNNING]);
+        CampaignRecipient::factory()->create(['campaign_id' => $running->id, 'status' => CampaignRecipientStatus::FAILED]);
+
+        $this->get(route('campaigns.show', $completedWithoutFailures))
+            ->assertInertia(fn ($page) => $page->where('campaign.can_retry_failed', false));
+
+        $this->get(route('campaigns.show', $completedWithFailures))
+            ->assertInertia(fn ($page) => $page->where('campaign.can_retry_failed', true));
+
+        $this->get(route('campaigns.show', $running))
+            ->assertInertia(fn ($page) => $page->where('campaign.can_retry_failed', false));
+    });
+
+    test('the create page pre-selects the leads given in the lead_ids query string', function () {
+        $failedLead = Lead::factory()->create(['phone' => '5581999999999']);
+        $otherLead = Lead::factory()->create(['phone' => '5581988888888']);
+
+        $response = $this->get(route('campaigns.create', ['lead_ids' => [$failedLead->id]]));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('campaigns/Create')
+            ->where('preselectedLeadIds', [$failedLead->id])
+        );
+
+        expect($otherLead)->not->toBeNull();
+    });
+
+    test('the create page ignores lead_ids that are not selectable for campaigns', function () {
+        $lead = Lead::factory()->create(['phone' => '5581999999999']);
+        $otherUsersLead = Lead::factory()->create(['user_id' => User::factory()->create()->id, 'phone' => '5581988888888']);
+        $noPhoneLead = Lead::factory()->create(['phone' => null]);
+
+        $response = $this->get(route('campaigns.create', [
+            'lead_ids' => [$lead->id, $otherUsersLead->id, $noPhoneLead->id, 999999],
+        ]));
+
+        $response->assertOk();
+        $response->assertInertia(fn ($page) => $page
+            ->component('campaigns/Create')
+            ->where('preselectedLeadIds', [$lead->id])
+        );
+    });
+
     test('a running campaign cannot be started again', function () {
         Queue::fake();
         $campaign = Campaign::factory()->create(['status' => CampaignStatus::RUNNING]);

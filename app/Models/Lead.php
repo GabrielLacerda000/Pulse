@@ -156,6 +156,23 @@ class Lead extends Model
     }
 
     /**
+     * Which of the given raw ids correspond to Leads within the given
+     * selectable set, used to validate a Campaign create page's
+     * pre-filled Lead selection (e.g. from a retry-failed shortcut).
+     *
+     * @param  Collection<int, Lead>  $leads
+     * @param  array<int, mixed>  $rawIds
+     * @return Collection<int, int>
+     */
+    public static function preselectedIdsFrom(Collection $leads, array $rawIds): Collection
+    {
+        return collect($rawIds)
+            ->map(fn ($id) => (int) $id)
+            ->intersect($leads->pluck('id'))
+            ->values();
+    }
+
+    /**
      * The distinct filter option values available across all leads.
      *
      * @return array{statuses: array<LeadStatus>, categories: Collection<int, string>, cities: Collection<int, string>}

@@ -1,14 +1,15 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import { AlertTriangle } from '@lucide/vue';
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
 import CampaignProgressBar from '@/components/campaigns/CampaignProgressBar.vue';
 import Heading from '@/components/Heading.vue';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CAMPAIGN_STATUS_LABELS } from '@/constants/campaignStatus';
 import { dashboard } from '@/routes';
-import { index } from '@/routes/campaigns';
+import { create, index } from '@/routes/campaigns';
 import type { CampaignProgress, FailedCampaignRecipient } from '@/types';
 
 const props = defineProps<{
@@ -16,10 +17,17 @@ const props = defineProps<{
         id: number;
         name: string;
         status: CampaignProgress['status'];
+        can_retry_failed: boolean;
     };
     progress: CampaignProgress;
     failedRecipients: FailedCampaignRecipient[];
 }>();
+
+const retryLeadIds = computed(() =>
+    props.failedRecipients
+        .map((recipient) => recipient.lead_id)
+        .filter((leadId): leadId is number => leadId !== null),
+);
 
 defineOptions({
     layout: {
@@ -73,8 +81,19 @@ function handleProgressUpdate(data: CampaignProgress) {
         </Card>
 
         <Card v-else class="max-w-xl">
-            <CardHeader>
+            <CardHeader class="flex flex-row items-center justify-between">
                 <CardTitle>Resumo do envio</CardTitle>
+                <Button
+                    v-if="props.campaign.can_retry_failed"
+                    as-child
+                    variant="outline"
+                    size="sm"
+                    class="rounded-full"
+                >
+                    <Link :href="create({ query: { lead_ids: retryLeadIds } })">
+                        Tentar novamente com falhas
+                    </Link>
+                </Button>
             </CardHeader>
             <CardContent class="flex flex-col gap-4">
                 <div class="flex gap-6 text-sm">
