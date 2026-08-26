@@ -19,15 +19,22 @@ const progress = ref<CampaignProgress>(props.initialProgress);
 const percentage = () =>
     progress.value.total === 0
         ? 0
-        : Math.round(((progress.value.sent + progress.value.failed) / progress.value.total) * 100);
+        : Math.round(
+              ((progress.value.sent + progress.value.failed) /
+                  progress.value.total) *
+                  100,
+          );
 
 let pollTimer: ReturnType<typeof setTimeout> | null = null;
 
 async function poll() {
     try {
-        const response = await fetch(progressRoute.url({ campaign: props.campaignId }), {
-            headers: { Accept: 'application/json' },
-        });
+        const response = await fetch(
+            progressRoute.url({ campaign: props.campaignId }),
+            {
+                headers: { Accept: 'application/json' },
+            },
+        );
         const data: CampaignProgress = await response.json();
 
         progress.value = data;
@@ -60,10 +67,22 @@ onUnmounted(() => {
 
 <template>
     <div class="flex flex-col gap-2">
-        <div class="flex items-center justify-between text-sm text-muted-foreground">
-            <span>{{ progress.sent + progress.failed }} de {{ progress.total }} enviadas</span>
+        <div
+            class="flex items-center justify-between text-sm text-muted-foreground"
+        >
+            <span
+                >{{ progress.sent + progress.failed }} de
+                {{ progress.total }} enviadas</span
+            >
             <span>{{ percentage() }}%</span>
         </div>
-        <Progress :model-value="percentage()" />
+        <Progress
+            :model-value="percentage()"
+            :indicator-class="
+                progress.status === 'running'
+                    ? 'bg-green-500 animate-pulse'
+                    : undefined
+            "
+        />
     </div>
 </template>
