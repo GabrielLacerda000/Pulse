@@ -162,7 +162,7 @@ class Campaign extends Model
     /**
      * The shape consumed by the campaigns/Show page's own campaign prop.
      *
-     * @return array{id: int, name: string, status: CampaignStatus, can_retry_failed: bool}
+     * @return array{id: int, name: string, status: CampaignStatus, can_retry_failed: bool, started_at: ?string, completed_at: ?string}
      */
     public function toShowPayload(): array
     {
@@ -171,6 +171,8 @@ class Campaign extends Model
             'name' => $this->name,
             'status' => $this->status,
             'can_retry_failed' => $this->canRetryFailed(),
+            'started_at' => $this->started_at?->toJSON(),
+            'completed_at' => $this->completed_at?->toJSON(),
         ];
     }
 

@@ -563,6 +563,101 @@ describe('as an authenticated user', function () {
             ->assertInertia(fn ($page) => $page->where('campaign.can_retry_failed', false));
     });
 
+    test('the show page exposes started_at and completed_at', function () {
+        $campaign = Campaign::factory()->create([
+            'status' => CampaignStatus::COMPLETED,
+            'started_at' => '2026-01-01 10:00:00',
+            'completed_at' => '2026-01-01 10:05:00',
+        ]);
+
+        $response = $this->get(route('campaigns.show', $campaign));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('campaign.started_at', $campaign->started_at->toJSON())
+            ->where('campaign.completed_at', $campaign->completed_at->toJSON())
+        );
+    });
+
+    test('the show page recipients listing includes all statuses, paginated', function () {
+        $campaign = Campaign::factory()->create();
+        CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::SENT]);
+        CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::FAILED]);
+        CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::PENDING]);
+        CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::PROCESSING]);
+
+        $response = $this->get(route('campaigns.show', $campaign));
+
+        $response->assertInertia(fn ($page) => $page
+            ->has('recipients.data', 4)
+            ->where('recipients.per_page', 15)
+        );
+    });
+
+    test('the recipients listing exposes rendered_content and error_code', function () {
+        $campaign = Campaign::factory()->create();
+        CampaignRecipient::factory()->create([
+            'campaign_id' => $campaign->id,
+            'status' => CampaignRecipientStatus::FAILED,
+            'error_code' => 'MESSAGE_SEND_FAILED',
+            'rendered_content' => 'Olá!',
+        ]);
+
+        $response = $this->get(route('campaigns.show', $campaign));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('recipients.data.0.rendered_content', 'Olá!')
+            ->where('recipients.data.0.error_code', 'MESSAGE_SEND_FAILED')
+        );
+    });
+
+    test('the recipients listing search matches company name or phone', function () {
+        $campaign = Campaign::factory()->create();
+        CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'company_name' => 'Empresa Alfa', 'phone' => '5581911111111']);
+        CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'company_name' => 'Empresa Beta', 'phone' => '5581922222222']);
+
+        $this->get(route('campaigns.show', ['campaign' => $campaign, 'search' => 'Alfa']))
+            ->assertInertia(fn ($page) => $page
+                ->has('recipients.data', 1)
+                ->where('recipients.data.0.company_name', 'Empresa Alfa')
+            );
+
+        $this->get(route('campaigns.show', ['campaign' => $campaign, 'search' => '5581922222222']))
+            ->assertInertia(fn ($page) => $page
+                ->has('recipients.data', 1)
+                ->where('recipients.data.0.company_name', 'Empresa Beta')
+            );
+    });
+
+    test('the recipients listing status filter narrows results and folds processing into pending', function () {
+        $campaign = Campaign::factory()->create();
+        CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::SENT]);
+        CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::FAILED]);
+        CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::PENDING]);
+        CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::PROCESSING]);
+
+        $this->get(route('campaigns.show', ['campaign' => $campaign, 'status' => 'sent']))
+            ->assertInertia(fn ($page) => $page->has('recipients.data', 1));
+
+        $this->get(route('campaigns.show', ['campaign' => $campaign, 'status' => 'failed']))
+            ->assertInertia(fn ($page) => $page->has('recipients.data', 1));
+
+        $this->get(route('campaigns.show', ['campaign' => $campaign, 'status' => 'pending']))
+            ->assertInertia(fn ($page) => $page->has('recipients.data', 2));
+    });
+
+    test('the failedRecipients retry list still includes every failed lead regardless of the recipients page or filter', function () {
+        $campaign = Campaign::factory()->create();
+        CampaignRecipient::factory()->count(20)->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::SENT]);
+        CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::FAILED]);
+
+        $response = $this->get(route('campaigns.show', ['campaign' => $campaign, 'status' => 'sent']));
+
+        $response->assertInertia(fn ($page) => $page
+            ->has('recipients.data', 15)
+            ->has('failedRecipients', 1)
+        );
+    });
+
     test('the create page pre-selects the leads given in the lead_ids query string', function () {
         $failedLead = Lead::factory()->create(['phone' => '5581999999999']);
         $otherLead = Lead::factory()->create(['phone' => '5581988888888']);

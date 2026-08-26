@@ -73,11 +73,19 @@ class CampaignController extends Controller
     /**
      * Display a running, completed, or failed campaign's send progress.
      */
-    public function show(Campaign $campaign): Response
+    public function show(Request $request, Campaign $campaign): Response
     {
+        $filters = $request->only(['search', 'status']);
+
         return Inertia::render('campaigns/Show', [
             'campaign' => $campaign->toShowPayload(),
             'progress' => $campaign->progressCounts(),
+            'recipients' => $campaign->recipients()
+                ->search($filters['search'] ?? null)
+                ->filterStatus($filters['status'] ?? null)
+                ->paginate(15, ['id', 'lead_id', 'company_name', 'phone', 'status', 'error_code', 'rendered_content'])
+                ->withQueryString(),
+            'filters' => $filters,
             'failedRecipients' => $campaign->recipients()
                 ->where('status', CampaignRecipientStatus::FAILED)
                 ->get(['id', 'lead_id', 'company_name', 'phone', 'error_code']),
