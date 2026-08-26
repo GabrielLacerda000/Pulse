@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCampaignRecipientFilters } from '@/composables/useCampaignRecipientFilters';
+import { usePhoneMask } from '@/composables/usePhoneMask';
 import { CAMPAIGN_STATUS_LABELS } from '@/constants/campaignStatus';
 import { PULSE_WPP_ERROR_CODE_LABELS } from '@/constants/pulseWppErrorCode';
 import { dashboard } from '@/routes';
@@ -61,6 +62,8 @@ const { filters, goToPage } = useCampaignRecipientFilters(
     show.url({ campaign: props.campaign.id }),
     props.filters,
 );
+
+const { formatPhoneDisplay } = usePhoneMask();
 
 const successRate = computed(() => {
     if (liveProgress.value.total === 0) {
@@ -244,7 +247,7 @@ function handleProgressUpdate(data: CampaignProgress) {
                                     {{ recipient.company_name }}
                                 </td>
                                 <td class="px-4 py-3 text-muted-foreground">
-                                    {{ recipient.phone }}
+                                    {{ formatPhoneDisplay(recipient.phone) }}
                                 </td>
                                 <td class="max-w-xs truncate px-4 py-3 text-muted-foreground">
                                     {{ recipient.rendered_content || '—' }}
