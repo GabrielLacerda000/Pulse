@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { computed } from 'vue';
 import { FileQuestion, Lock, ServerCrash, TriangleAlert } from '@lucide/vue';
+import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import { dashboard } from '@/routes';
 

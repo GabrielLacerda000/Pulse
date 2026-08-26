@@ -84,7 +84,7 @@ export type RenderedMessageTemplate = {
 
 export type CampaignStatus = 'draft' | 'running' | 'completed' | 'failed';
 
-export type CampaignRecipientStatus = 'pending' | 'sent' | 'failed';
+export type CampaignRecipientStatus = 'pending' | 'processing' | 'sent' | 'failed';
 
 export type Campaign = {
     id: number;
@@ -102,6 +102,31 @@ export type Campaign = {
 export type CampaignFilters = {
     search?: string;
     status?: CampaignStatus | '';
+};
+
+export type PulseWppErrorCode =
+    | 'UNAUTHORIZED'
+    | 'INVALID_REQUEST'
+    | 'WHATSAPP_NOT_CONNECTED'
+    | 'WHATSAPP_AUTH_REQUIRED'
+    | 'MESSAGE_SEND_FAILED'
+    | 'PROVIDER_UNAVAILABLE'
+    | 'PROVIDER_UNREACHABLE'
+    | 'INTERNAL_ERROR';
+
+export type CampaignRecipient = {
+    id: number;
+    lead_id: number | null;
+    company_name: string;
+    phone: string;
+    status: CampaignRecipientStatus;
+    error_code: PulseWppErrorCode | null;
+    rendered_content: string;
+};
+
+export type CampaignRecipientFilters = {
+    search?: string;
+    status?: 'pending' | 'sent' | 'failed' | '';
 };
 
 export type CampaignProgress = {
