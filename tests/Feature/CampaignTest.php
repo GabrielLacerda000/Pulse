@@ -2,7 +2,7 @@
 
 use App\Enums\CampaignRecipientStatus;
 use App\Enums\CampaignStatus;
-use App\Jobs\SendCampaignJob;
+use App\Jobs\SendCampaignRecipientJob;
 use App\Models\Campaign;
 use App\Models\CampaignMessage;
 use App\Models\CampaignRecipient;
@@ -383,13 +383,15 @@ describe('as an authenticated user', function () {
             'pulse-wpp.test/whatsapp/status' => Http::response(['status' => 'connected', 'phone' => '5582999999999']),
         ]);
         $campaign = Campaign::factory()->create(['status' => CampaignStatus::DRAFT, 'name' => 'Lançamento']);
+        $recipient = CampaignRecipient::factory()->create(['campaign_id' => $campaign->id]);
 
         $response = $this->post(route('campaigns.start', $campaign));
 
         $response->assertRedirect(route('campaigns.index'));
         $response->assertInertiaFlash('toast', ['type' => 'success', 'message' => 'Campanha "Lançamento" iniciada.']);
         expect($campaign->fresh()->status)->toBe(CampaignStatus::RUNNING);
-        Queue::assertPushed(SendCampaignJob::class, fn ($job) => $job->campaign->is($campaign));
+        expect($campaign->fresh()->started_at)->not->toBeNull();
+        Queue::assertPushed(SendCampaignRecipientJob::class, fn ($job) => $job->recipient->is($recipient));
     });
 
     test('starting a campaign is blocked while another owned campaign is already running', function () {
@@ -402,7 +404,7 @@ describe('as an authenticated user', function () {
         $response->assertRedirect(route('campaigns.index'));
         $response->assertInertiaFlash('toast', ['type' => 'error', 'message' => 'Você já tem uma campanha em andamento. Aguarde ela terminar antes de iniciar outra.']);
         expect($draft->fresh()->status)->toBe(CampaignStatus::DRAFT);
-        Queue::assertNotPushed(SendCampaignJob::class);
+        Queue::assertNotPushed(SendCampaignRecipientJob::class);
     });
 
     test('starting a campaign is blocked when whatsapp is not connected', function () {
@@ -417,7 +419,7 @@ describe('as an authenticated user', function () {
         $response->assertRedirect(route('campaigns.index'));
         $response->assertInertiaFlash('toast', ['type' => 'error', 'message' => 'Conecte o WhatsApp antes de iniciar a campanha.']);
         expect($campaign->fresh()->status)->toBe(CampaignStatus::DRAFT);
-        Queue::assertNotPushed(SendCampaignJob::class);
+        Queue::assertNotPushed(SendCampaignRecipientJob::class);
     });
 
     test('starting a campaign is blocked when pulse-wpp is unreachable', function () {
@@ -435,7 +437,7 @@ describe('as an authenticated user', function () {
         $response->assertRedirect(route('campaigns.index'));
         $response->assertInertiaFlash('toast', ['type' => 'error', 'message' => 'Conecte o WhatsApp antes de iniciar a campanha.']);
         expect($campaign->fresh()->status)->toBe(CampaignStatus::DRAFT);
-        Queue::assertNotPushed(SendCampaignJob::class);
+        Queue::assertNotPushed(SendCampaignRecipientJob::class);
     });
 
     test('the progress endpoint returns recipient counters and status for a running campaign', function () {
@@ -452,6 +454,24 @@ describe('as an authenticated user', function () {
             'failed' => 1,
             'pending' => 3,
             'total' => 6,
+            'status' => 'running',
+        ]);
+    });
+
+    test('the progress endpoint folds a processing recipient into the pending count', function () {
+        $campaign = Campaign::factory()->create(['status' => CampaignStatus::RUNNING]);
+        CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::SENT]);
+        CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::PROCESSING]);
+        CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::PENDING]);
+
+        $response = $this->getJson(route('campaigns.progress', $campaign));
+
+        $response->assertOk();
+        $response->assertJson([
+            'sent' => 1,
+            'failed' => 0,
+            'pending' => 2,
+            'total' => 3,
             'status' => 'running',
         ]);
     });
@@ -581,7 +601,7 @@ describe('as an authenticated user', function () {
         $response = $this->post(route('campaigns.start', $campaign));
 
         $response->assertForbidden();
-        Queue::assertNotPushed(SendCampaignJob::class);
+        Queue::assertNotPushed(SendCampaignRecipientJob::class);
     });
 
     test('a completed campaign cannot be started again', function () {
@@ -591,6 +611,6 @@ describe('as an authenticated user', function () {
         $response = $this->post(route('campaigns.start', $campaign));
 
         $response->assertForbidden();
-        Queue::assertNotPushed(SendCampaignJob::class);
+        Queue::assertNotPushed(SendCampaignRecipientJob::class);
     });
 });

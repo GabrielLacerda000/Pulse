@@ -34,6 +34,8 @@ class Campaign extends Model
         'status',
         'delay_min_seconds',
         'delay_max_seconds',
+        'started_at',
+        'completed_at',
     ];
 
     protected function casts(): array
@@ -42,6 +44,8 @@ class Campaign extends Model
             'status' => CampaignStatus::class,
             'delay_min_seconds' => 'integer',
             'delay_max_seconds' => 'integer',
+            'started_at' => 'datetime',
+            'completed_at' => 'datetime',
         ];
     }
 
@@ -132,7 +136,8 @@ class Campaign extends Model
 
         $sent = (int) ($counts[CampaignRecipientStatus::SENT->value] ?? 0);
         $failed = (int) ($counts[CampaignRecipientStatus::FAILED->value] ?? 0);
-        $pending = (int) ($counts[CampaignRecipientStatus::PENDING->value] ?? 0);
+        $pending = (int) ($counts[CampaignRecipientStatus::PENDING->value] ?? 0)
+            + (int) ($counts[CampaignRecipientStatus::PROCESSING->value] ?? 0);
 
         return [
             'sent' => $sent,

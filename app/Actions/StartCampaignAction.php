@@ -2,11 +2,12 @@
 
 namespace App\Actions;
 
+use App\Enums\CampaignRecipientStatus;
 use App\Enums\CampaignStatus;
 use App\Enums\WhatsAppConnectionStatus;
 use App\Exceptions\CampaignStartBlockedException;
 use App\Exceptions\PulseWppException;
-use App\Jobs\SendCampaignJob;
+use App\Jobs\SendCampaignRecipientJob;
 use App\Models\Campaign;
 use App\Services\PulseWppClient;
 use Illuminate\Support\Facades\Cache;
@@ -22,6 +23,10 @@ final class StartCampaignAction
      * The concurrency guard and the running-flag update are wrapped in a
      * lock keyed by owner, so two start requests fired at the same time
      * can't both pass the guard before either marks its campaign running.
+     *
+     * Only the first recipient's job is dispatched here: each job claims
+     * and sends to exactly one recipient, then dispatches the next one
+     * itself (see SendCampaignRecipientJob).
      *
      * @throws CampaignStartBlockedException
      */
@@ -40,10 +45,21 @@ final class StartCampaignAction
                 );
             }
 
-            $campaign->update(['status' => CampaignStatus::RUNNING]);
+            $campaign->update(['status' => CampaignStatus::RUNNING, 'started_at' => now()]);
         });
 
-        SendCampaignJob::dispatch($campaign);
+        $firstRecipient = $campaign->recipients()
+            ->where('status', CampaignRecipientStatus::PENDING)
+            ->orderBy('id')
+            ->first();
+
+        if ($firstRecipient === null) {
+            $campaign->update(['status' => CampaignStatus::COMPLETED, 'completed_at' => now()]);
+
+            return;
+        }
+
+        SendCampaignRecipientJob::dispatch($firstRecipient);
     }
 
     private function isWhatsAppConnected(): bool
