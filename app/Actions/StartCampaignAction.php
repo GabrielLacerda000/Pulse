@@ -2,6 +2,7 @@
 
 namespace App\Actions;
 
+use App\Concerns\LogsStructuredEvents;
 use App\Enums\CampaignRecipientStatus;
 use App\Enums\CampaignStatus;
 use App\Enums\WhatsAppConnectionStatus;
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\Cache;
 
 final class StartCampaignAction
 {
+    use LogsStructuredEvents;
+
     public function __construct(private readonly PulseWppClient $client) {}
 
     /**
@@ -34,18 +37,30 @@ final class StartCampaignAction
     {
         Cache::lock('campaign-start:'.$campaign->user_id, 10)->block(5, function () use ($campaign): void {
             if (Campaign::query()->where('status', CampaignStatus::RUNNING)->exists()) {
+                $this->logEvent('campaign.start_blocked', [
+                    ...$this->campaignLogContext($campaign),
+                    'reason' => 'concurrent_run',
+                ], 'notice');
+
                 throw new CampaignStartBlockedException(
                     __('Você já tem uma campanha em andamento. Aguarde ela terminar antes de iniciar outra.')
                 );
             }
 
             if (! $this->isWhatsAppConnected()) {
+                $this->logEvent('campaign.start_blocked', [
+                    ...$this->campaignLogContext($campaign),
+                    'reason' => 'whatsapp_disconnected',
+                ], 'notice');
+
                 throw new CampaignStartBlockedException(
                     __('Conecte o WhatsApp antes de iniciar a campanha.')
                 );
             }
 
             $campaign->update(['status' => CampaignStatus::RUNNING, 'started_at' => now()]);
+
+            $this->logEvent('campaign.started', $this->campaignLogContext($campaign));
         });
 
         $firstRecipient = $campaign->recipients()
@@ -69,5 +84,16 @@ final class StartCampaignAction
         } catch (PulseWppException) {
             return false;
         }
+    }
+
+    /**
+     * @return array{campaign_id: int, user_id: int}
+     */
+    private function campaignLogContext(Campaign $campaign): array
+    {
+        return [
+            'campaign_id' => $campaign->id,
+            'user_id' => $campaign->user_id,
+        ];
     }
 }
