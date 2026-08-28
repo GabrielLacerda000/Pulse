@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Concerns\LogsStructuredEvents;
 use App\Data\PulseWppHealthData;
 use App\Data\SendMessageResultData;
 use App\Data\WhatsAppQrData;
@@ -14,6 +15,8 @@ use Illuminate\Support\Facades\Http;
 
 final class PulseWppClient
 {
+    use LogsStructuredEvents;
+
     public function __construct(
         private readonly string $baseUrl,
         private readonly string $apiKey,
@@ -60,7 +63,7 @@ final class PulseWppClient
 
     private function get(string $endpoint): Response
     {
-        return $this->response($this->send(fn (): Response => $this->request()->get($endpoint)));
+        return $this->authenticated($endpoint, fn (): Response => $this->request()->get($endpoint));
     }
 
     /**
@@ -68,7 +71,27 @@ final class PulseWppClient
      */
     private function post(string $endpoint, array $data = []): Response
     {
-        return $this->response($this->send(fn (): Response => $this->request()->post($endpoint, $data)));
+        return $this->authenticated($endpoint, fn (): Response => $this->request()->post($endpoint, $data));
+    }
+
+    /**
+     * Runs an authenticated request, logging whatsapp.api.request_failed
+     * before rethrowing on a PulseWppException. health() intentionally
+     * bypasses this (and the logging) since it isn't a WhatsApp API call.
+     */
+    private function authenticated(string $endpoint, callable $request): Response
+    {
+        try {
+            return $this->response($this->send($request));
+        } catch (PulseWppException $exception) {
+            $this->logEvent('whatsapp.api.request_failed', [
+                'endpoint' => $endpoint,
+                'error_code' => $exception->errorCode->value,
+                'error' => ['message' => $exception->getMessage()],
+            ], 'warning');
+
+            throw $exception;
+        }
     }
 
     /**

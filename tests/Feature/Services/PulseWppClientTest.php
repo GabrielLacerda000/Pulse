@@ -9,12 +9,16 @@ use App\Enums\WhatsAppConnectionStatus;
 use App\Exceptions\PulseWppException;
 use App\Services\PulseWppClient;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 beforeEach(function () {
     $this->client = new PulseWppClient(
         baseUrl: 'http://pulse-wpp.test',
         apiKey: 'testing-api-key',
     );
+
+    $this->channel = Mockery::spy();
+    Log::shouldReceive('channel')->with('campaigns')->andReturn($this->channel);
 });
 
 test('health returns a typed PulseWppHealthData without sending an auth header', function () {
@@ -163,4 +167,134 @@ test('an unmapped error code falls back to INTERNAL_ERROR', function () {
     } catch (PulseWppException $exception) {
         expect($exception->errorCode)->toBe(PulseWppErrorCode::INTERNAL_ERROR);
     }
+});
+
+test('status logs whatsapp.api.request_failed at warning with endpoint, error_code, and error.message', function () {
+    Http::fake([
+        'pulse-wpp.test/whatsapp/status' => Http::response([
+            'success' => false,
+            'error' => ['code' => 'INTERNAL_ERROR', 'message' => 'boom'],
+        ], 500),
+    ]);
+
+    try {
+        $this->client->status();
+    } catch (PulseWppException) {
+        // expected
+    }
+
+    $this->channel->shouldHaveReceived('warning')->once()->withArgs(
+        fn (string $event, array $context) => $event === 'whatsapp.api.request_failed'
+            && $context['endpoint'] === '/whatsapp/status'
+            && $context['error_code'] === 'INTERNAL_ERROR'
+            && $context['error']['message'] === 'boom'
+    );
+});
+
+test('qr logs whatsapp.api.request_failed on failure', function () {
+    Http::fake([
+        'pulse-wpp.test/whatsapp/qr' => Http::response([
+            'success' => false,
+            'error' => ['code' => 'WHATSAPP_NOT_CONNECTED', 'message' => 'not connected'],
+        ], 409),
+    ]);
+
+    try {
+        $this->client->qr();
+    } catch (PulseWppException) {
+        // expected
+    }
+
+    $this->channel->shouldHaveReceived('warning')->once()->withArgs(
+        fn (string $event, array $context) => $event === 'whatsapp.api.request_failed'
+            && $context['endpoint'] === '/whatsapp/qr'
+            && $context['error_code'] === 'WHATSAPP_NOT_CONNECTED'
+    );
+});
+
+test('connect logs whatsapp.api.request_failed on failure', function () {
+    Http::fake([
+        'pulse-wpp.test/whatsapp/connect' => Http::response([
+            'success' => false,
+            'error' => ['code' => 'PROVIDER_UNAVAILABLE', 'message' => 'unavailable'],
+        ], 503),
+    ]);
+
+    try {
+        $this->client->connect();
+    } catch (PulseWppException) {
+        // expected
+    }
+
+    $this->channel->shouldHaveReceived('warning')->once()->withArgs(
+        fn (string $event, array $context) => $event === 'whatsapp.api.request_failed'
+            && $context['endpoint'] === '/whatsapp/connect'
+            && $context['error_code'] === 'PROVIDER_UNAVAILABLE'
+    );
+});
+
+test('disconnect logs whatsapp.api.request_failed on failure', function () {
+    Http::fake([
+        'pulse-wpp.test/whatsapp/disconnect' => Http::response([
+            'success' => false,
+            'error' => ['code' => 'INTERNAL_ERROR', 'message' => 'boom'],
+        ], 500),
+    ]);
+
+    try {
+        $this->client->disconnect();
+    } catch (PulseWppException) {
+        // expected
+    }
+
+    $this->channel->shouldHaveReceived('warning')->once()->withArgs(
+        fn (string $event, array $context) => $event === 'whatsapp.api.request_failed'
+            && $context['endpoint'] === '/whatsapp/disconnect'
+            && $context['error_code'] === 'INTERNAL_ERROR'
+    );
+});
+
+test('sendMessage logs whatsapp.api.request_failed on failure without leaking the phone number or message body', function () {
+    Http::fake([
+        'pulse-wpp.test/messages' => Http::response([
+            'success' => false,
+            'error' => ['code' => 'MESSAGE_SEND_FAILED', 'message' => 'send failed'],
+        ], 502),
+    ]);
+
+    try {
+        $this->client->sendMessage('5582999999999', 'segredo do corpo da mensagem');
+    } catch (PulseWppException) {
+        // expected
+    }
+
+    $this->channel->shouldHaveReceived('warning')->once()->withArgs(
+        function (string $event, array $context) {
+            expect(json_encode($context))
+                ->not->toContain('5582999999999')
+                ->not->toContain('segredo do corpo da mensagem');
+
+            return $event === 'whatsapp.api.request_failed'
+                && $context['endpoint'] === '/messages'
+                && $context['error_code'] === 'MESSAGE_SEND_FAILED';
+        }
+    );
+});
+
+test('a connection failure also logs whatsapp.api.request_failed with the PROVIDER_UNREACHABLE code', function () {
+    Http::fake([
+        'pulse-wpp.test/whatsapp/status' => Http::failedConnection(),
+    ]);
+
+    try {
+        $this->client->status();
+    } catch (PulseWppException) {
+        // expected
+    }
+
+    $this->channel->shouldHaveReceived('warning')->once()->withArgs(
+        fn (string $event, array $context) => $event === 'whatsapp.api.request_failed'
+            && $context['endpoint'] === '/whatsapp/status'
+            && $context['error_code'] === 'PROVIDER_UNREACHABLE'
+    );
 });
