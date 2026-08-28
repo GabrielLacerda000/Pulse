@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Actions\RenderMessageTemplateAction;
+use App\Concerns\LogsStructuredEvents;
 use App\Enums\CampaignRecipientStatus;
 use App\Enums\CampaignStatus;
 use App\Enums\PulseWppErrorCode;
@@ -17,7 +18,6 @@ use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
 use Throwable;
 
 /**
@@ -49,7 +49,7 @@ use Throwable;
  */
 final class SendCampaignRecipientJob implements ShouldQueue
 {
-    use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+    use Dispatchable, InteractsWithQueue, LogsStructuredEvents, Queueable, SerializesModels;
 
     public int $tries = 1;
 
@@ -69,6 +69,8 @@ final class SendCampaignRecipientJob implements ShouldQueue
             ->update(['status' => CampaignRecipientStatus::PROCESSING]);
 
         if ($claimed === 0) {
+            $this->logEvent('campaign.recipient.claim_missed', $this->recipientLogContext());
+
             return;
         }
 
@@ -98,6 +100,18 @@ final class SendCampaignRecipientJob implements ShouldQueue
             'error_code' => $errorCode,
         ]);
 
+        if ($errorCode === null) {
+            $this->logEvent('campaign.recipient.sent', [
+                ...$this->recipientLogContext(),
+                'campaign_message_id' => $message->id,
+            ]);
+        } else {
+            $this->logEvent('campaign.recipient.failed', [
+                ...$this->recipientLogContext(),
+                'error_code' => $errorCode,
+            ], 'warning');
+        }
+
         $this->dispatchNextOrFinalize($campaign);
     }
 
@@ -118,6 +132,8 @@ final class SendCampaignRecipientJob implements ShouldQueue
             ->update(['status' => CampaignRecipientStatus::FAILED, 'error_code' => $errorCode]);
 
         $campaign->update(['status' => CampaignStatus::FAILED]);
+
+        $this->logEvent('campaign.aborted_auth_required', $this->campaignLogContext($campaign), 'warning');
     }
 
     /**
@@ -133,11 +149,10 @@ final class SendCampaignRecipientJob implements ShouldQueue
                 fn (Throwable $exception) => $this->isDatabaseLockException($exception),
             );
         } catch (Throwable $exception) {
-            Log::error('Failed to record campaign recipient outcome after retrying.', [
-                'campaign_id' => $this->recipient->campaign_id,
-                'campaign_recipient_id' => $this->recipient->id,
+            $this->logEvent('campaign.recipient.outcome_write_failed', [
+                ...$this->recipientLogContext(),
                 'exception' => $exception,
-            ]);
+            ], 'error');
         }
     }
 
@@ -150,6 +165,8 @@ final class SendCampaignRecipientJob implements ShouldQueue
 
         if ($next === null) {
             $campaign->update(['status' => CampaignStatus::COMPLETED, 'completed_at' => now()]);
+
+            $this->logEvent('campaign.completed', $this->campaignLogContext($campaign));
 
             return;
         }
@@ -165,6 +182,33 @@ final class SendCampaignRecipientJob implements ShouldQueue
 
     public function failed(?Throwable $exception): void
     {
+        $this->logEvent('campaign.job_failed', [
+            ...$this->recipientLogContext(),
+            'exception' => $exception,
+        ], 'error');
+
         $this->recipient->campaign->update(['status' => CampaignStatus::FAILED]);
+    }
+
+    /**
+     * @return array{campaign_id: int, user_id: int}
+     */
+    private function campaignLogContext(Campaign $campaign): array
+    {
+        return [
+            'campaign_id' => $campaign->id,
+            'user_id' => $campaign->user_id,
+        ];
+    }
+
+    /**
+     * @return array{campaign_id: int, user_id: int, campaign_recipient_id: int}
+     */
+    private function recipientLogContext(): array
+    {
+        return [
+            ...$this->campaignLogContext($this->recipient->campaign),
+            'campaign_recipient_id' => $this->recipient->id,
+        ];
     }
 }

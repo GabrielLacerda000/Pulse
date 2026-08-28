@@ -19,6 +19,9 @@ use PDOException;
 
 beforeEach(function () {
     $this->actingAs(User::factory()->create());
+
+    $this->channel = Mockery::spy();
+    Log::shouldReceive('channel')->with('campaigns')->andReturn($this->channel);
 });
 
 test('it claims a pending recipient, sends to it, and dispatches the next one with a delay in range', function () {
@@ -180,9 +183,8 @@ test('it retries a transient SQLite lock error when recording the outcome, then 
     expect($campaign->fresh()->status)->toBe(CampaignStatus::COMPLETED);
 });
 
-test('it logs when the database stays locked while recording the outcome', function () {
+test('it logs campaign.recipient.outcome_write_failed when the database stays locked while recording the outcome', function () {
     Http::fake(['pulse-wpp.test/messages' => Http::response(['success' => true, 'messageId' => 'abc'])]);
-    Log::spy();
 
     $campaign = Campaign::factory()->create(['status' => CampaignStatus::RUNNING]);
     CampaignMessage::factory()->create(['campaign_id' => $campaign->id]);
@@ -197,14 +199,46 @@ test('it logs when the database stays locked while recording the outcome', funct
     CampaignRecipient::flushEventListeners();
 
     expect($recipient->fresh()->status)->toBe(CampaignRecipientStatus::PROCESSING);
-    Log::shouldHaveReceived('error')->once();
+    $this->channel->shouldHaveReceived('error')->once()->withArgs(
+        fn (string $event, array $context) => $event === 'campaign.recipient.outcome_write_failed'
+            && $context['campaign_id'] === $campaign->id
+            && $context['user_id'] === $campaign->user_id
+            && $context['campaign_recipient_id'] === $recipient->id
+            && $context['exception'] instanceof QueryException
+    );
 });
 
-test('a job that fails outright marks the campaign failed', function () {
+test('a claim that affects zero rows logs campaign.recipient.claim_missed and sends nothing', function () {
+    Http::fake(['pulse-wpp.test/messages' => Http::response(['success' => true, 'messageId' => 'abc'])]);
+
+    $campaign = Campaign::factory()->create(['status' => CampaignStatus::RUNNING]);
+    CampaignMessage::factory()->create(['campaign_id' => $campaign->id]);
+    $recipient = CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::PROCESSING]);
+
+    (new SendCampaignRecipientJob($recipient))->handle(app(PulseWppClient::class), app(RenderMessageTemplateAction::class));
+
+    Http::assertNothingSent();
+    $this->channel->shouldHaveReceived('info')->once()->withArgs(
+        fn (string $event, array $context) => $event === 'campaign.recipient.claim_missed'
+            && $context['campaign_id'] === $campaign->id
+            && $context['user_id'] === $campaign->user_id
+            && $context['campaign_recipient_id'] === $recipient->id
+    );
+});
+
+test('a job that fails outright logs campaign.job_failed with the exception and marks the campaign failed', function () {
     $campaign = Campaign::factory()->create(['status' => CampaignStatus::RUNNING]);
     $recipient = CampaignRecipient::factory()->create(['campaign_id' => $campaign->id]);
+    $exception = new RuntimeException('boom');
 
-    (new SendCampaignRecipientJob($recipient))->failed(new RuntimeException('boom'));
+    (new SendCampaignRecipientJob($recipient))->failed($exception);
 
     expect($campaign->fresh()->status)->toBe(CampaignStatus::FAILED);
+    $this->channel->shouldHaveReceived('error')->once()->withArgs(
+        fn (string $event, array $context) => $event === 'campaign.job_failed'
+            && $context['campaign_id'] === $campaign->id
+            && $context['user_id'] === $campaign->user_id
+            && $context['campaign_recipient_id'] === $recipient->id
+            && $context['exception'] === $exception
+    );
 });
