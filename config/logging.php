@@ -73,6 +73,14 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'campaigns' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/campaigns.log'),
+            'level' => env('LOG_CAMPAIGNS_LEVEL', 'debug'),
+            'max_files' => env('LOG_CAMPAIGNS_DAYS', 30),
+            'replace_placeholders' => true,
+        ],
+
         'monthly' => [
             'driver' => 'monthly',
             'path' => storage_path('logs/laravel.log'),
