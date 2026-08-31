@@ -47,7 +47,7 @@ trait CampaignValidationRules
         return function (string $attribute, mixed $value, Closure $fail): void {
             $lead = Lead::find($value);
 
-            if ($lead && $lead->whatsapp_phone === null) {
+            if ($lead instanceof Lead && $lead->whatsapp_phone === null) {
                 $fail('O lead selecionado não possui um telefone válido para WhatsApp.');
             }
         };

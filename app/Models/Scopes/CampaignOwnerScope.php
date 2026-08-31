@@ -11,6 +11,8 @@ use Illuminate\Support\Facades\Auth;
 /**
  * Isolates Campaigns by owner directly, and CampaignMessages/CampaignRecipients
  * by their parent Campaign's owner, since only Campaign carries a user_id column.
+ *
+ * @implements Scope<Model>
  */
 class CampaignOwnerScope implements Scope
 {

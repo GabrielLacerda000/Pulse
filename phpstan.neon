@@ -11,3 +11,8 @@ parameters:
         - routes/
 
     level: 7
+
+    ignoreErrors:
+        -
+            message: '#Call to an undefined method Faker\\Generator::stateAbbr\(\)#'
+            path: database/factories/LeadFactory.php

@@ -21,7 +21,7 @@ class CampaignFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => fn (): int => Auth::id() ?? User::factory()->create()->id,
+            'user_id' => fn (): int => (int) (Auth::id() ?? User::factory()->create()->id),
             'name' => $this->faker->words(3, true),
             'status' => CampaignStatus::DRAFT,
             'delay_min_seconds' => 30,

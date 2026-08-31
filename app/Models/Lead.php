@@ -14,6 +14,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * @property int $user_id
+ * @property-read string|null $whatsapp_phone
+ */
 #[ScopedBy([LeadOwnerScope::class])]
 class Lead extends Model
 {
@@ -26,7 +30,7 @@ class Lead extends Model
     protected static function booted(): void
     {
         static::creating(function (Lead $lead): void {
-            $lead->user_id ??= Auth::id();
+            $lead->user_id ??= (int) Auth::id();
         });
     }
 
@@ -72,6 +76,8 @@ class Lead extends Model
     /**
      * The lead's phone normalized for the wa.me WhatsApp link, or null
      * when the lead has no phone or it fails normalization.
+     *
+     * @return Attribute<string|null, never>
      */
     protected function whatsappPhone(): Attribute
     {
@@ -82,6 +88,9 @@ class Lead extends Model
 
     /**
      * Filter leads by free text matching the company name.
+     *
+     * @param  Builder<Lead>  $query
+     * @return Builder<Lead>
      */
     public function scopeSearch(Builder $query, ?string $search): Builder
     {
@@ -94,6 +103,9 @@ class Lead extends Model
 
     /**
      * Filter leads by status.
+     *
+     * @param  Builder<Lead>  $query
+     * @return Builder<Lead>
      */
     public function scopeFilterStatus(Builder $query, ?string $status): Builder
     {
@@ -106,6 +118,9 @@ class Lead extends Model
 
     /**
      * Filter leads by category.
+     *
+     * @param  Builder<Lead>  $query
+     * @return Builder<Lead>
      */
     public function scopeFilterCategory(Builder $query, ?string $category): Builder
     {
@@ -118,6 +133,9 @@ class Lead extends Model
 
     /**
      * Filter leads by city.
+     *
+     * @param  Builder<Lead>  $query
+     * @return Builder<Lead>
      */
     public function scopeFilterCity(Builder $query, ?string $city): Builder
     {
@@ -132,6 +150,9 @@ class Lead extends Model
      * Filter leads by phone, matching on digits only so the search doesn't
      * depend on the exact mask/formatting stored on the lead or typed by
      * the user (e.g. "(81) 99999-9999" matches a search for "819999999").
+     *
+     * @param  Builder<Lead>  $query
+     * @return Builder<Lead>
      */
     public function scopeFilterPhone(Builder $query, ?string $phone): Builder
     {
@@ -148,6 +169,9 @@ class Lead extends Model
 
     /**
      * Sort leads by an allowed column, defaulting to most recent first.
+     *
+     * @param  Builder<Lead>  $query
+     * @return Builder<Lead>
      */
     public function scopeSortBy(Builder $query, ?string $sort, ?string $direction): Builder
     {

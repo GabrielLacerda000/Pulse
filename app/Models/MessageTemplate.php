@@ -9,6 +9,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * @property int $user_id
+ */
 #[ScopedBy([MessageTemplateOwnerScope::class])]
 class MessageTemplate extends Model
 {
@@ -21,7 +24,7 @@ class MessageTemplate extends Model
     protected static function booted(): void
     {
         static::creating(function (MessageTemplate $template): void {
-            $template->user_id ??= Auth::id();
+            $template->user_id ??= (int) Auth::id();
         });
     }
 

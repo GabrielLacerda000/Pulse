@@ -68,6 +68,9 @@ class CampaignRecipient extends Model
 
     /**
      * Filter recipients by free text matching the company name or phone.
+     *
+     * @param  Builder<CampaignRecipient>  $query
+     * @return Builder<CampaignRecipient>
      */
     public function scopeSearch(Builder $query, ?string $search): Builder
     {
@@ -85,6 +88,9 @@ class CampaignRecipient extends Model
      * Filter recipients by status. A "pending" filter also matches
      * "processing" recipients, since a recipient mid-dispatch is still
      * pending from the user's point of view.
+     *
+     * @param  Builder<CampaignRecipient>  $query
+     * @return Builder<CampaignRecipient>
      */
     public function scopeFilterStatus(Builder $query, ?string $status): Builder
     {

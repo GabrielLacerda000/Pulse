@@ -45,7 +45,7 @@ final class ParseLeadImportAction
 
         $header = array_shift($sheet) ?? [];
 
-        $columns = $this->assertValidStructure($header);
+        $columns = $this->assertValidStructure(array_values($header));
 
         $existingLeadsByPhone = $this->existingLeadsByNormalizedPhone();
 
@@ -58,7 +58,7 @@ final class ParseLeadImportAction
         $rows = [];
 
         foreach ($sheet as $rawRow) {
-            if ($this->isBlankRow($rawRow)) {
+            if ($this->isBlankRow(array_values($rawRow))) {
                 continue;
             }
 
@@ -94,7 +94,7 @@ final class ParseLeadImportAction
 
         $expected = array_map(fn (string $label): string => Str::slug($label, '_'), self::EXPECTED_COLUMNS);
 
-        if (array_values($columns) !== array_values($expected)) {
+        if ($columns !== $expected) {
             throw ValidationException::withMessages([
                 'file' => 'A planilha não segue o formato esperado. Verifique se as colunas correspondem ao layout do sistema de captação.',
             ]);

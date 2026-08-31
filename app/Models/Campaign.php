@@ -11,8 +11,15 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Auth;
 
+/**
+ * @property int $user_id
+ * @property CampaignStatus $status
+ * @property Carbon|null $started_at
+ * @property Carbon|null $completed_at
+ */
 #[ScopedBy([CampaignOwnerScope::class])]
 class Campaign extends Model
 {
@@ -25,7 +32,7 @@ class Campaign extends Model
     protected static function booted(): void
     {
         static::creating(function (Campaign $campaign): void {
-            $campaign->user_id ??= Auth::id();
+            $campaign->user_id ??= (int) Auth::id();
         });
     }
 
@@ -71,6 +78,9 @@ class Campaign extends Model
 
     /**
      * Filter campaigns by free text matching the name.
+     *
+     * @param  Builder<Campaign>  $query
+     * @return Builder<Campaign>
      */
     public function scopeSearch(Builder $query, ?string $search): Builder
     {
@@ -83,6 +93,9 @@ class Campaign extends Model
 
     /**
      * Filter campaigns by status.
+     *
+     * @param  Builder<Campaign>  $query
+     * @return Builder<Campaign>
      */
     public function scopeFilterStatus(Builder $query, ?string $status): Builder
     {
