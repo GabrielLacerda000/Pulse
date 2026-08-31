@@ -105,20 +105,20 @@ onUnmounted(clearPoll);
 <template>
     <Head title="WhatsApp" />
 
-    <div class="flex flex-col gap-6 p-6">
+    <div class="mx-auto flex w-full max-w-xl flex-col gap-6 p-6">
         <Heading
             title="WhatsApp"
             description="Conecte e gerencie o número usado para suas campanhas."
         />
 
-        <Alert v-if="props.error" variant="destructive" class="max-w-xl">
+        <Alert v-if="props.error" variant="destructive">
             <AlertTriangle />
             <AlertTitle>Não foi possível falar com o WhatsApp</AlertTitle>
             <AlertDescription>{{ props.error }}</AlertDescription>
         </Alert>
 
         <template v-else-if="props.connection">
-            <Card class="max-w-xl">
+            <Card>
                 <CardHeader class="flex flex-row items-center justify-between">
                     <CardTitle>{{ cardTitle }}</CardTitle>
                     <div class="flex items-center gap-2">
@@ -294,10 +294,7 @@ onUnmounted(clearPoll);
                 </CardContent>
             </Card>
 
-            <Card
-                v-if="props.connection.status === 'connected'"
-                class="max-w-xs"
-            >
+            <Card v-if="props.connection.status === 'connected'">
                 <CardHeader>
                     <CardTitle class="text-base">Conexão</CardTitle>
                 </CardHeader>
