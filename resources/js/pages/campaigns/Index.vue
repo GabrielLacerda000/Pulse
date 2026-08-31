@@ -111,11 +111,16 @@ const { filters, goToPage } = useCampaignFilters(props.filters);
                         </td>
                         <td class="px-4 py-3">
                             <Badge
-                                :variant="CAMPAIGN_STATUS_VARIANTS[campaign.status]"
-                                :class="CAMPAIGN_STATUS_CLASSES[campaign.status]"
-                            >{{
-                                CAMPAIGN_STATUS_LABELS[campaign.status]
-                            }}</Badge>
+                                :variant="
+                                    CAMPAIGN_STATUS_VARIANTS[campaign.status]
+                                "
+                                :class="
+                                    CAMPAIGN_STATUS_CLASSES[campaign.status]
+                                "
+                                >{{
+                                    CAMPAIGN_STATUS_LABELS[campaign.status]
+                                }}</Badge
+                            >
                         </td>
                         <td class="px-4 py-3 text-muted-foreground">
                             {{ campaign.recipients_count }}
@@ -144,10 +149,7 @@ const { filters, goToPage } = useCampaignFilters(props.filters);
                                 </Button>
                                 <CampaignDeleteDialog :campaign="campaign" />
                             </div>
-                            <div
-                                v-else
-                                class="flex items-center gap-1"
-                            >
+                            <div v-else class="flex items-center gap-1">
                                 <Button
                                     as-child
                                     variant="ghost"

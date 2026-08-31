@@ -60,7 +60,9 @@ const expanded = ref(false);
                 group="pipeline-leads"
                 ghost-class="opacity-40"
                 class="flex min-h-16 flex-col gap-2"
-                @update:model-value="emit('update:modelValue', $event as Lead[])"
+                @update:model-value="
+                    emit('update:modelValue', $event as Lead[])
+                "
                 @add="emit('leadDropped', $event)"
             >
                 <PipelineLeadCard

@@ -22,7 +22,14 @@ const props = withDefaults(
         filterOptions: LeadFilterOptions;
         messageTemplates: MessageTemplate[];
         errors?: Partial<
-            Record<'name' | 'delay_min_seconds' | 'delay_max_seconds' | 'lead_ids' | 'messages', string>
+            Record<
+                | 'name'
+                | 'delay_min_seconds'
+                | 'delay_max_seconds'
+                | 'lead_ids'
+                | 'messages',
+                string
+            >
         >;
     }>(),
     {
@@ -83,7 +90,6 @@ const filteredLeads = computed(() =>
         return true;
     }),
 );
-
 </script>
 
 <template>

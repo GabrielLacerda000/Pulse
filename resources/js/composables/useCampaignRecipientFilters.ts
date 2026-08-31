@@ -3,7 +3,9 @@ import { useDebounceFn } from '@vueuse/core';
 import { reactive, watch } from 'vue';
 import type { CampaignRecipientFilters } from '@/types';
 
-function toQueryParams(filters: CampaignRecipientFilters): Record<string, string> {
+function toQueryParams(
+    filters: CampaignRecipientFilters,
+): Record<string, string> {
     return Object.fromEntries(
         Object.entries(filters).filter(([, value]) => !!value),
     ) as Record<string, string>;
@@ -31,8 +33,14 @@ export function useCampaignRecipientFilters(
 
     const applyFiltersDebounced = useDebounceFn(applyFilters, 300);
 
-    watch(() => filters.search, () => applyFiltersDebounced());
-    watch(() => filters.status, () => applyFilters());
+    watch(
+        () => filters.search,
+        () => applyFiltersDebounced(),
+    );
+    watch(
+        () => filters.status,
+        () => applyFilters(),
+    );
 
     function goToPage(page: number) {
         router.get(

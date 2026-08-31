@@ -50,7 +50,11 @@ const templateUrls = computed(() => {
         <Link
             :href="createMessageTemplate()"
             class="text-primary underline-offset-4 hover:underline"
-            :title="iconOnly ? 'Nenhum modelo de mensagem cadastrado. Criar modelo' : undefined"
+            :title="
+                iconOnly
+                    ? 'Nenhum modelo de mensagem cadastrado. Criar modelo'
+                    : undefined
+            "
         >
             Criar modelo
         </Link>

@@ -23,7 +23,12 @@ defineProps<{
 <template>
     <Dialog>
         <DialogTrigger as-child>
-            <Button variant="ghost" size="icon-sm" title="Iniciar" class="cursor-pointer">
+            <Button
+                variant="ghost"
+                size="icon-sm"
+                title="Iniciar"
+                class="cursor-pointer"
+            >
                 <Play class="size-4" />
             </Button>
         </DialogTrigger>

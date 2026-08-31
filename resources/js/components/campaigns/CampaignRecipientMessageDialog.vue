@@ -39,17 +39,18 @@ const errorLabel = computed(
         <DialogContent>
             <DialogHeader class="space-y-3">
                 <DialogTitle>{{ recipient.company_name }}</DialogTitle>
-                <DialogDescription>{{ formatPhoneDisplay(recipient.phone) }}</DialogDescription>
+                <DialogDescription>{{
+                    formatPhoneDisplay(recipient.phone)
+                }}</DialogDescription>
             </DialogHeader>
 
-            <p class="rounded-lg border border-border bg-muted/50 p-3 text-sm whitespace-pre-wrap">
+            <p
+                class="rounded-lg border border-border bg-muted/50 p-3 text-sm whitespace-pre-wrap"
+            >
                 {{ recipient.rendered_content }}
             </p>
 
-            <p
-                v-if="errorLabel"
-                class="text-sm text-destructive"
-            >
+            <p v-if="errorLabel" class="text-sm text-destructive">
                 Motivo da falha: {{ errorLabel }}
             </p>
         </DialogContent>

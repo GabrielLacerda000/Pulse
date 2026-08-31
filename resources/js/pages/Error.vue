@@ -20,7 +20,8 @@ const content = computed(() => {
             404: {
                 icon: FileQuestion,
                 title: 'Página não encontrada',
-                description: 'A página que você procura não existe ou foi movida.',
+                description:
+                    'A página que você procura não existe ou foi movida.',
             },
             419: {
                 icon: TriangleAlert,
@@ -36,12 +37,14 @@ const content = computed(() => {
             503: {
                 icon: ServerCrash,
                 title: 'Manutenção em andamento',
-                description: 'Estamos em manutenção rápida. Volte em alguns minutos.',
+                description:
+                    'Estamos em manutenção rápida. Volte em alguns minutos.',
             },
         }[props.status] ?? {
             icon: TriangleAlert,
             title: 'Algo deu errado',
-            description: 'Ocorreu um erro inesperado. Tente novamente em instantes.',
+            description:
+                'Ocorreu um erro inesperado. Tente novamente em instantes.',
         }
     );
 });
@@ -57,7 +60,10 @@ const content = computed(() => {
             <div
                 class="flex size-16 items-center justify-center rounded-full bg-muted"
             >
-                <component :is="content.icon" class="size-8 text-muted-foreground" />
+                <component
+                    :is="content.icon"
+                    class="size-8 text-muted-foreground"
+                />
             </div>
 
             <div class="flex max-w-md flex-col gap-2">

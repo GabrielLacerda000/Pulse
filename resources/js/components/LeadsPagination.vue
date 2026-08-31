@@ -13,10 +13,7 @@ const emit = defineEmits<{
 </script>
 
 <template>
-    <div
-        v-if="lastPage > 1"
-        class="flex items-center justify-between"
-    >
+    <div v-if="lastPage > 1" class="flex items-center justify-between">
         <p class="text-sm text-muted-foreground">
             Página {{ currentPage }} de {{ lastPage }}
         </p>
@@ -43,4 +40,3 @@ const emit = defineEmits<{
         </div>
     </div>
 </template>
-

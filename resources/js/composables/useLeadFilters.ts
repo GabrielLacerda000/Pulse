@@ -38,9 +38,8 @@ export function useLeadFilters(
 
     const applyFiltersDebounced = useDebounceFn(applyFilters, 300);
 
-    watch(
-        [() => filters.search, () => filters.phone],
-        () => applyFiltersDebounced(),
+    watch([() => filters.search, () => filters.phone], () =>
+        applyFiltersDebounced(),
     );
 
     watch(

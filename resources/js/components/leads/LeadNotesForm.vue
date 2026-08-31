@@ -27,7 +27,12 @@ defineProps<{
         />
         <InputError :message="errors.notes" />
 
-        <Button type="submit" :disabled="processing" size="sm" class="rounded-full">
+        <Button
+            type="submit"
+            :disabled="processing"
+            size="sm"
+            class="rounded-full"
+        >
             Salvar notas
         </Button>
     </Form>

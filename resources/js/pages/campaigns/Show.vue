@@ -70,7 +70,9 @@ const successRate = computed(() => {
         return 0;
     }
 
-    return Math.round((liveProgress.value.sent / liveProgress.value.total) * 100);
+    return Math.round(
+        (liveProgress.value.sent / liveProgress.value.total) * 100,
+    );
 });
 
 const dateFormatter = new Intl.DateTimeFormat('pt-BR', {
@@ -82,13 +84,17 @@ function formatDate(value: string | null): string | null {
     return value ? dateFormatter.format(new Date(value)) : null;
 }
 
-function formatDuration(startedAt: string | null, completedAt: string | null): string | null {
+function formatDuration(
+    startedAt: string | null,
+    completedAt: string | null,
+): string | null {
     if (!startedAt || !completedAt) {
         return null;
     }
 
     const totalMinutes = Math.round(
-        (new Date(completedAt).getTime() - new Date(startedAt).getTime()) / 60000,
+        (new Date(completedAt).getTime() - new Date(startedAt).getTime()) /
+            60000,
     );
     const hours = Math.floor(totalMinutes / 60);
     const minutes = totalMinutes % 60;
@@ -132,7 +138,11 @@ function handleProgressUpdate(data: CampaignProgress) {
                 description="Progresso do disparo da campanha"
             />
             <div class="flex flex-col items-end gap-1">
-                <Badge :variant="currentStatus === 'failed' ? 'destructive' : 'secondary'">
+                <Badge
+                    :variant="
+                        currentStatus === 'failed' ? 'destructive' : 'secondary'
+                    "
+                >
                     {{ CAMPAIGN_STATUS_LABELS[currentStatus] }}
                 </Badge>
                 <p v-if="startedAtLabel" class="text-xs text-muted-foreground">
@@ -158,33 +168,48 @@ function handleProgressUpdate(data: CampaignProgress) {
             </CardHeader>
             <CardContent class="flex flex-col gap-4">
                 <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
-                    <div class="rounded-xl border border-border p-4 text-center">
+                    <div
+                        class="rounded-xl border border-border p-4 text-center"
+                    >
                         <p class="text-2xl font-semibold text-foreground">
                             {{ liveProgress.total }}
                         </p>
-                        <p class="text-xs text-muted-foreground">Destinatários</p>
+                        <p class="text-xs text-muted-foreground">
+                            Destinatários
+                        </p>
                     </div>
-                    <div class="rounded-xl border border-border p-4 text-center">
+                    <div
+                        class="rounded-xl border border-border p-4 text-center"
+                    >
                         <p class="text-2xl font-semibold text-foreground">
                             {{ liveProgress.sent }}
                         </p>
                         <p class="text-xs text-muted-foreground">Enviadas</p>
                     </div>
-                    <div class="rounded-xl border border-border p-4 text-center">
+                    <div
+                        class="rounded-xl border border-border p-4 text-center"
+                    >
                         <p class="text-2xl font-semibold text-foreground">
                             {{ liveProgress.failed }}
                         </p>
                         <p class="text-xs text-muted-foreground">Falharam</p>
                     </div>
-                    <div class="rounded-xl border border-border p-4 text-center">
+                    <div
+                        class="rounded-xl border border-border p-4 text-center"
+                    >
                         <p class="text-2xl font-semibold text-foreground">
                             {{ successRate }}%
                         </p>
-                        <p class="text-xs text-muted-foreground">Taxa de sucesso</p>
+                        <p class="text-xs text-muted-foreground">
+                            Taxa de sucesso
+                        </p>
                     </div>
                 </div>
 
-                <p v-if="executionDuration" class="text-sm text-muted-foreground">
+                <p
+                    v-if="executionDuration"
+                    class="text-sm text-muted-foreground"
+                >
                     Tempo de execução: {{ executionDuration }}
                 </p>
             </CardContent>
@@ -220,8 +245,12 @@ function handleProgressUpdate(data: CampaignProgress) {
                                 class="border-b border-border bg-muted text-xs font-semibold tracking-wide text-muted-foreground uppercase"
                             >
                                 <th class="px-4 py-3 font-semibold">Nome</th>
-                                <th class="px-4 py-3 font-semibold">Telefone</th>
-                                <th class="px-4 py-3 font-semibold">Mensagem</th>
+                                <th class="px-4 py-3 font-semibold">
+                                    Telefone
+                                </th>
+                                <th class="px-4 py-3 font-semibold">
+                                    Mensagem
+                                </th>
                                 <th class="px-4 py-3 font-semibold">Status</th>
                                 <th class="px-4 py-3 font-semibold">Ações</th>
                             </tr>
@@ -249,22 +278,35 @@ function handleProgressUpdate(data: CampaignProgress) {
                                 <td class="px-4 py-3 text-muted-foreground">
                                     {{ formatPhoneDisplay(recipient.phone) }}
                                 </td>
-                                <td class="max-w-xs truncate px-4 py-3 text-muted-foreground">
+                                <td
+                                    class="max-w-xs truncate px-4 py-3 text-muted-foreground"
+                                >
                                     {{ recipient.rendered_content || '—' }}
                                 </td>
                                 <td class="px-4 py-3">
                                     <div class="flex flex-col gap-1">
-                                        <CampaignRecipientStatusBadge :status="recipient.status" />
+                                        <CampaignRecipientStatusBadge
+                                            :status="recipient.status"
+                                        />
                                         <span
-                                            v-if="recipient.status === 'failed' && recipient.error_code"
+                                            v-if="
+                                                recipient.status === 'failed' &&
+                                                recipient.error_code
+                                            "
                                             class="text-xs text-destructive"
                                         >
-                                            {{ PULSE_WPP_ERROR_CODE_LABELS[recipient.error_code] }}
+                                            {{
+                                                PULSE_WPP_ERROR_CODE_LABELS[
+                                                    recipient.error_code
+                                                ]
+                                            }}
                                         </span>
                                     </div>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <CampaignRecipientMessageDialog :recipient="recipient" />
+                                    <CampaignRecipientMessageDialog
+                                        :recipient="recipient"
+                                    />
                                 </td>
                             </tr>
                         </tbody>

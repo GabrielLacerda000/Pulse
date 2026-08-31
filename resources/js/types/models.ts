@@ -84,7 +84,8 @@ export type RenderedMessageTemplate = {
 
 export type CampaignStatus = 'draft' | 'running' | 'completed' | 'failed';
 
-export type CampaignRecipientStatus = 'pending' | 'processing' | 'sent' | 'failed';
+export type CampaignRecipientStatus =
+    'pending' | 'processing' | 'sent' | 'failed';
 
 export type Campaign = {
     id: number;
@@ -155,11 +156,7 @@ export type CampaignForEdit = {
 };
 
 export type WhatsAppConnectionStatus =
-    | 'disconnected'
-    | 'connecting'
-    | 'qr_required'
-    | 'connected'
-    | 'logged_out';
+    'disconnected' | 'connecting' | 'qr_required' | 'connected' | 'logged_out';
 
 export type WhatsAppConnection = {
     status: WhatsAppConnectionStatus;

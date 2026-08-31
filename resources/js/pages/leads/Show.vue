@@ -40,7 +40,10 @@ const location = computed(() => {
 
     <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 p-6">
         <div class="flex items-start justify-between gap-4">
-            <Heading :title="lead.company_name" :description="lead.category ?? undefined" />
+            <Heading
+                :title="lead.company_name"
+                :description="lead.category ?? undefined"
+            />
 
             <div class="flex shrink-0 items-center gap-1">
                 <LeadMessageTemplateSelector
@@ -58,15 +61,24 @@ const location = computed(() => {
         </div>
 
         <div class="grid gap-2 rounded-xl border border-border p-4 text-sm">
-            <div v-if="lead.phone" class="flex items-center gap-2 text-foreground">
+            <div
+                v-if="lead.phone"
+                class="flex items-center gap-2 text-foreground"
+            >
                 <Phone class="size-4 text-muted-foreground" />
                 {{ lead.phone }}
             </div>
-            <div v-if="lead.email" class="flex items-center gap-2 text-foreground">
+            <div
+                v-if="lead.email"
+                class="flex items-center gap-2 text-foreground"
+            >
                 <Mail class="size-4 text-muted-foreground" />
                 {{ lead.email }}
             </div>
-            <div v-if="lead.website" class="flex items-center gap-2 text-foreground">
+            <div
+                v-if="lead.website"
+                class="flex items-center gap-2 text-foreground"
+            >
                 <Globe class="size-4 text-muted-foreground" />
                 <a
                     :href="lead.website"
@@ -77,11 +89,17 @@ const location = computed(() => {
                     {{ lead.website }}
                 </a>
             </div>
-            <div v-if="lead.instagram" class="flex items-center gap-2 text-foreground">
+            <div
+                v-if="lead.instagram"
+                class="flex items-center gap-2 text-foreground"
+            >
                 <AtSign class="size-4 text-muted-foreground" />
                 {{ lead.instagram }}
             </div>
-            <div v-if="location" class="flex items-center gap-2 text-foreground">
+            <div
+                v-if="location"
+                class="flex items-center gap-2 text-foreground"
+            >
                 <MapPin class="size-4 text-muted-foreground" />
                 {{ location }}
             </div>
@@ -113,7 +131,9 @@ const location = computed(() => {
                     <dd class="flex items-center gap-1">
                         <Star class="size-4 fill-yellow-500 text-yellow-500" />
                         {{ lead.rating }}
-                        <span v-if="lead.reviews_count" class="text-muted-foreground"
+                        <span
+                            v-if="lead.reviews_count"
+                            class="text-muted-foreground"
                             >({{ lead.reviews_count }} avaliações)</span
                         >
                     </dd>

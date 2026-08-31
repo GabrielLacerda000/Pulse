@@ -55,8 +55,7 @@ function copyTemplate(templateId: string, templates: MessageTemplate[]) {
                     v-if="messageTemplates.length > 0"
                     :model-value="templateToCopy"
                     @update:model-value="
-                        (value) =>
-                            copyTemplate(String(value), messageTemplates)
+                        (value) => copyTemplate(String(value), messageTemplates)
                     "
                 >
                     <SelectTrigger class="rounded-full" size="sm">
@@ -87,8 +86,8 @@ function copyTemplate(templateId: string, templates: MessageTemplate[]) {
         </div>
 
         <p class="text-sm text-muted-foreground">
-            Copiar um modelo apenas preenche o texto inicial — editar a
-            mensagem aqui não altera o modelo original.
+            Copiar um modelo apenas preenche o texto inicial — editar a mensagem
+            aqui não altera o modelo original.
         </p>
 
         <div

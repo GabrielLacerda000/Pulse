@@ -41,9 +41,7 @@ function toggleAll(checked: boolean) {
             </button>
         </div>
 
-        <div
-            class="max-h-64 overflow-y-auto rounded-md border border-border"
-        >
+        <div class="max-h-64 overflow-y-auto rounded-md border border-border">
             <p
                 v-if="leads.length === 0"
                 class="px-3 py-4 text-sm text-muted-foreground"
@@ -74,7 +72,7 @@ function toggleAll(checked: boolean) {
             type="hidden"
             name="lead_ids[]"
             :value="leadId"
-        >
+        />
         <InputError :message="error" />
     </div>
 </template>

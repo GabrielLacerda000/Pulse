@@ -37,7 +37,13 @@ const ALL_VALUE = 'all';
 
 const hasActiveFilters = computed(
     () =>
-        !!(search.value || status.value || category.value || city.value || phone.value),
+        !!(
+            search.value ||
+            status.value ||
+            category.value ||
+            city.value ||
+            phone.value
+        ),
 );
 
 function clearFilters() {
@@ -121,8 +127,7 @@ function clearFilters() {
         <Select
             :model-value="city || ALL_VALUE"
             @update:model-value="
-                (value) =>
-                    (city = value === ALL_VALUE ? '' : (value as string))
+                (value) => (city = value === ALL_VALUE ? '' : (value as string))
             "
         >
             <SelectTrigger class="rounded-full" size="sm">

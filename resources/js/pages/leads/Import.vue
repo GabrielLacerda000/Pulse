@@ -8,11 +8,7 @@ import LeadImportSummary from '@/components/leads/LeadImportSummary.vue';
 import { Button } from '@/components/ui/button';
 import { dashboard } from '@/routes';
 import { index } from '@/routes/leads';
-import {
-    create,
-    preview as previewRoute,
-    store,
-} from '@/routes/leads/import';
+import { create, preview as previewRoute, store } from '@/routes/leads/import';
 import type { LeadImportPreview } from '@/types';
 
 const props = defineProps<{
