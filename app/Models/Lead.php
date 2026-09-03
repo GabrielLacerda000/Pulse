@@ -45,12 +45,15 @@ class Lead extends Model
         'email',
         'website',
         'instagram',
+        'facebook',
         'has_website',
         'has_instagram',
+        'likely_whatsapp',
         'city',
         'state',
         'status',
         'type',
+        'responsible',
         'score',
         'rating',
         'reviews_count',
@@ -58,6 +61,7 @@ class Lead extends Model
         'google_maps_url',
         'source_created_at',
         'notes',
+        'summary',
     ];
 
     protected function casts(): array
@@ -66,6 +70,7 @@ class Lead extends Model
             'status' => LeadStatus::class,
             'has_website' => 'boolean',
             'has_instagram' => 'boolean',
+            'likely_whatsapp' => 'boolean',
             'score' => 'integer',
             'rating' => 'decimal:2',
             'reviews_count' => 'integer',

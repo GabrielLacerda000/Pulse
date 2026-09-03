@@ -123,6 +123,20 @@ describe('as an authenticated user', function () {
         );
     });
 
+    test('a lead exposes its facebook and summary fields', function () {
+        $lead = Lead::factory()->create([
+            'facebook' => 'https://facebook.com/exemplo',
+            'summary' => 'Resumo gerado na captação.',
+        ]);
+
+        $response = $this->get(route('leads.show', $lead));
+
+        $response->assertInertia(fn ($page) => $page
+            ->where('lead.facebook', 'https://facebook.com/exemplo')
+            ->where('lead.summary', 'Resumo gerado na captação.')
+        );
+    });
+
     test('a lead with a valid phone exposes a normalized whatsapp phone', function () {
         $lead = Lead::factory()->create(['phone' => '(81) 3482-7554']);
 

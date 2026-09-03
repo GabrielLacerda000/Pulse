@@ -1,6 +1,15 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { AtSign, Globe, Mail, MapPin, Pencil, Phone, Star } from '@lucide/vue';
+import {
+    AtSign,
+    Globe,
+    Link as LinkIcon,
+    Mail,
+    MapPin,
+    Pencil,
+    Phone,
+    Star,
+} from '@lucide/vue';
 import { computed } from 'vue';
 import Heading from '@/components/Heading.vue';
 import LeadDeleteDialog from '@/components/leads/LeadDeleteDialog.vue';
@@ -97,6 +106,20 @@ const location = computed(() => {
                 {{ lead.instagram }}
             </div>
             <div
+                v-if="lead.facebook"
+                class="flex items-center gap-2 text-foreground"
+            >
+                <LinkIcon class="size-4 text-muted-foreground" />
+                <a
+                    :href="lead.facebook"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="truncate text-primary underline-offset-4 hover:underline"
+                >
+                    {{ lead.facebook }}
+                </a>
+            </div>
+            <div
                 v-if="location"
                 class="flex items-center gap-2 text-foreground"
             >
@@ -139,6 +162,15 @@ const location = computed(() => {
                     </dd>
                 </template>
             </dl>
+        </div>
+
+        <div v-if="lead.summary" class="space-y-2">
+            <h3 class="text-sm font-semibold text-muted-foreground uppercase">
+                Resumo
+            </h3>
+            <p class="text-sm whitespace-pre-line text-foreground">
+                {{ lead.summary }}
+            </p>
         </div>
 
         <div class="space-y-2">

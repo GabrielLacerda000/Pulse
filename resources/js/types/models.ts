@@ -16,6 +16,7 @@ export type Lead = {
     email: string | null;
     website: string | null;
     instagram: string | null;
+    facebook: string | null;
     has_website: boolean;
     has_instagram: boolean;
     city: string | null;
@@ -29,6 +30,7 @@ export type Lead = {
     google_maps_url: string | null;
     source_created_at: string | null;
     notes: string | null;
+    summary: string | null;
     created_at: string;
     updated_at: string;
     message_templates: RenderedMessageTemplate[];

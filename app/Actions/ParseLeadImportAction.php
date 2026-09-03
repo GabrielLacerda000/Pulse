@@ -16,15 +16,36 @@ use Throwable;
 final class ParseLeadImportAction
 {
     /**
-     * The column headers expected from the external capture system's export
-     * (PRD §9), in order.
+     * The column layouts accepted from the external capture system's export
+     * (PRD §9), keyed by format name. Each layout maps the expected header
+     * label, in order, to the canonical row key used by parseRow().
      *
-     * @var list<string>
+     * The "v2" layout reflects a 2026-09 change to the export tool: some
+     * columns were renamed (Categoria→Nicho, Criado em→Encontrado em),
+     * some added (WhatsApp provável, Facebook, Responsável, Resumo), and
+     * some dropped (Tem Instagram, Status, Tipo). Both layouts are accepted
+     * so spreadsheets exported before and after the change keep working.
+     *
+     * @var array<string, array<string, string>>
      */
-    private const array EXPECTED_COLUMNS = [
-        'Nome', 'Categoria', 'Telefone', 'E-mail', 'Site', 'Tem site',
-        'Instagram', 'Tem Instagram', 'Cidade', 'Estado', 'Status', 'Tipo',
-        'Score', 'Avaliação', 'Nº avaliações', 'Fonte', 'Google Maps', 'Criado em',
+    private const array COLUMN_FORMATS = [
+        'legacy' => [
+            'Nome' => 'nome', 'Categoria' => 'categoria', 'Telefone' => 'telefone',
+            'E-mail' => 'e_mail', 'Site' => 'site', 'Tem site' => 'tem_site',
+            'Instagram' => 'instagram', 'Tem Instagram' => 'tem_instagram',
+            'Cidade' => 'cidade', 'Estado' => 'estado', 'Status' => 'status', 'Tipo' => 'tipo',
+            'Score' => 'score', 'Avaliação' => 'avaliacao', 'Nº avaliações' => 'no_avaliacoes',
+            'Fonte' => 'fonte', 'Google Maps' => 'google_maps', 'Criado em' => 'criado_em',
+        ],
+        'v2' => [
+            'Nome' => 'nome', 'Nicho' => 'categoria', 'Telefone' => 'telefone',
+            'WhatsApp provável' => 'likely_whatsapp', 'Site' => 'site', 'Tem site' => 'tem_site',
+            'Instagram' => 'instagram', 'E-mail' => 'e_mail', 'Facebook' => 'facebook',
+            'Responsável' => 'responsible', 'Resumo' => 'summary', 'Cidade' => 'cidade',
+            'Estado' => 'estado', 'Score' => 'score', 'Avaliação' => 'avaliacao',
+            'Nº avaliações' => 'no_avaliacoes', 'Fonte' => 'fonte', 'Google Maps' => 'google_maps',
+            'Encontrado em' => 'criado_em',
+        ],
     ];
 
     public function __construct(
@@ -86,21 +107,23 @@ final class ParseLeadImportAction
 
     /**
      * @param  list<mixed>  $header
-     * @return list<string> the header cells normalized to slugs, used as row keys
+     * @return list<string> the canonical row keys (per the matched format) used by parseRow()
      */
     private function assertValidStructure(array $header): array
     {
         $columns = array_map(fn (mixed $label): string => Str::slug((string) $label, '_'), $header);
 
-        $expected = array_map(fn (string $label): string => Str::slug($label, '_'), self::EXPECTED_COLUMNS);
+        foreach (self::COLUMN_FORMATS as $format) {
+            $expected = array_map(fn (string $label): string => Str::slug($label, '_'), array_keys($format));
 
-        if ($columns !== $expected) {
-            throw ValidationException::withMessages([
-                'file' => 'A planilha não segue o formato esperado. Verifique se as colunas correspondem ao layout do sistema de captação.',
-            ]);
+            if ($columns === $expected) {
+                return array_values($format);
+            }
         }
 
-        return $columns;
+        throw ValidationException::withMessages([
+            'file' => 'A planilha não segue o formato esperado. Verifique se as colunas correspondem ao layout do sistema de captação.',
+        ]);
     }
 
     /**
@@ -133,6 +156,8 @@ final class ParseLeadImportAction
         $existingLead = $normalizedPhone ? $existingLeadsByPhone->get($normalizedPhone) : null;
         $pendingRowIndex = (! $existingLead && $normalizedPhone) ? ($pendingRowsByPhone[$normalizedPhone] ?? null) : null;
 
+        $instagram = $this->nullableString($row['instagram'] ?? null);
+
         $attributes = [
             'company_name' => $companyName,
             'category' => $this->nullableString($row['categoria'] ?? null),
@@ -140,17 +165,25 @@ final class ParseLeadImportAction
             'email' => $this->nullableString($row['e_mail'] ?? null),
             'website' => $this->nullableString($row['site'] ?? null),
             'has_website' => $this->toBoolean($row['tem_site'] ?? null),
-            'instagram' => $this->nullableString($row['instagram'] ?? null),
-            'has_instagram' => $this->toBoolean($row['tem_instagram'] ?? null),
+            'instagram' => $instagram,
+            'facebook' => $this->nullableString($row['facebook'] ?? null),
+            'has_instagram' => array_key_exists('tem_instagram', $row)
+                ? $this->toBoolean($row['tem_instagram'])
+                : $instagram !== null,
+            'likely_whatsapp' => array_key_exists('likely_whatsapp', $row)
+                ? $this->toBoolean($row['likely_whatsapp'])
+                : null,
             'city' => $this->nullableString($row['cidade'] ?? null),
             'state' => $this->nullableString($row['estado'] ?? null),
             'type' => $this->nullableString($row['tipo'] ?? null),
+            'responsible' => $this->nullableString($row['responsible'] ?? null),
             'score' => $this->toInteger($row['score'] ?? null),
             'rating' => $this->toDecimal($row['avaliacao'] ?? null),
             'reviews_count' => $this->toInteger($row['no_avaliacoes'] ?? null),
             'source' => $this->nullableString($row['fonte'] ?? null),
             'google_maps_url' => $this->nullableString($row['google_maps'] ?? null),
             'source_created_at' => $this->toDate($row['criado_em'] ?? null),
+            'summary' => $this->nullableString($row['summary'] ?? null),
         ];
 
         if ($existingLead) {

@@ -28,12 +28,15 @@ class LeadFactory extends Factory
             'email' => $this->faker->safeEmail(),
             'website' => $this->faker->domainName(),
             'instagram' => '@'.$this->faker->userName(),
+            'facebook' => $this->faker->optional()->url(),
             'has_website' => $this->faker->boolean(),
             'has_instagram' => $this->faker->boolean(),
+            'likely_whatsapp' => $this->faker->optional()->boolean(),
             'city' => $this->faker->city(),
             'state' => $this->faker->stateAbbr(),
             'status' => LeadStatus::NEW,
             'type' => $this->faker->randomElement(['Sem presença', 'Com site', 'Com Instagram']),
+            'responsible' => $this->faker->optional()->name(),
             'score' => $this->faker->numberBetween(0, 100),
             'rating' => $this->faker->randomFloat(2, 1, 5),
             'reviews_count' => $this->faker->numberBetween(0, 500),
@@ -41,6 +44,7 @@ class LeadFactory extends Factory
             'google_maps_url' => $this->faker->url(),
             'source_created_at' => $this->faker->dateTimeBetween('-1 year'),
             'notes' => $this->faker->optional()->sentence(),
+            'summary' => $this->faker->optional()->paragraph(),
         ];
     }
 }

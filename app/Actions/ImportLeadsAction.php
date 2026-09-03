@@ -19,7 +19,7 @@ final class ImportLeadsAction
      */
     private const array UPDATABLE_FIELDS = [
         'type', 'score', 'rating', 'reviews_count', 'source',
-        'google_maps_url', 'has_website', 'has_instagram', 'source_created_at',
+        'google_maps_url', 'has_website', 'has_instagram', 'likely_whatsapp', 'source_created_at',
     ];
 
     /**

@@ -8,19 +8,27 @@ use App\Models\User;
 use Illuminate\Http\UploadedFile;
 
 /**
- * Builds a fake CSV UploadedFile matching the external capture system's
- * expected column layout (PRD §9), given a list of rows (each a list of
- * cell values in column order).
+ * Builds a fake CSV UploadedFile matching one of the external capture
+ * system's expected column layouts (PRD §9), given a list of rows (each a
+ * list of cell values in column order). "legacy" is the original 18-column
+ * layout; "v2" is the 2026-09 layout (renamed/added/dropped columns).
  *
  * @param  list<list<string>>  $rows
  */
-function fakeLeadsSpreadsheet(array $rows): UploadedFile
+function fakeLeadsSpreadsheet(array $rows, string $format = 'legacy'): UploadedFile
 {
-    $header = [
-        'Nome', 'Categoria', 'Telefone', 'E-mail', 'Site', 'Tem site',
-        'Instagram', 'Tem Instagram', 'Cidade', 'Estado', 'Status', 'Tipo',
-        'Score', 'Avaliação', 'Nº avaliações', 'Fonte', 'Google Maps', 'Criado em',
-    ];
+    $header = match ($format) {
+        'legacy' => [
+            'Nome', 'Categoria', 'Telefone', 'E-mail', 'Site', 'Tem site',
+            'Instagram', 'Tem Instagram', 'Cidade', 'Estado', 'Status', 'Tipo',
+            'Score', 'Avaliação', 'Nº avaliações', 'Fonte', 'Google Maps', 'Criado em',
+        ],
+        'v2' => [
+            'Nome', 'Nicho', 'Telefone', 'WhatsApp provável', 'Site', 'Tem site',
+            'Instagram', 'E-mail', 'Facebook', 'Responsável', 'Resumo', 'Cidade', 'Estado',
+            'Score', 'Avaliação', 'Nº avaliações', 'Fonte', 'Google Maps', 'Encontrado em',
+        ],
+    };
 
     $lines = collect([$header, ...$rows])
         ->map(fn (array $row): string => implode(',', array_map(
@@ -232,5 +240,78 @@ describe('as an authenticated user', function () {
         expect(Lead::firstWhere('company_name', 'Clínica Nova'))->not->toBeNull();
         expect($existing->fresh()->score)->toBe(90);
         expect(Lead::firstWhere('company_name', 'Empresa Duplicada')?->score)->toBe(70);
+    });
+
+    describe('the v2 spreadsheet layout', function () {
+        test('previewing a v2-format spreadsheet reports counts of new, duplicated and invalid rows', function () {
+            Lead::factory()->create(['phone' => '5581988887777']);
+
+            $file = fakeLeadsSpreadsheet([
+                ['Clínica Nova', 'Odontologia', '81999990000', 'Sim', 'nova.com.br', 'Sim', '@nova', 'nova@exemplo.com', 'https://facebook.com/nova', 'Ana', 'Resumo da clínica.', 'Recife', 'PE', '80', '4.5', '20', 'google_maps', 'https://maps.example/nova', '2026-01-10'],
+                ['', 'Sem nicho', '81999991111', 'Não', '', 'Não', '', '', '', '', '', 'Olinda', 'PE', '10', '', '', 'google_maps', '', ''],
+                ['Empresa Existente', 'Restaurante', '81988887777', 'Sim', '', 'Sim', '', '', '', '', '', 'Recife', 'PE', '90', '4.9', '50', 'google_maps', 'https://maps.example/existente', '2026-02-01'],
+            ], format: 'v2');
+
+            $response = $this->post(route('leads.import.preview'), ['file' => $file]);
+
+            $response->assertOk();
+            $response->assertInertia(fn ($page) => $page
+                ->component('leads/Import')
+                ->where('preview.total', 3)
+                ->where('preview.new', 1)
+                ->where('preview.duplicated', 1)
+                ->where('preview.invalid', 1)
+            );
+        });
+
+        test('confirming a v2-format import creates a lead with the new fields mapped correctly', function () {
+            $file = fakeLeadsSpreadsheet([
+                ['Clínica Nova', 'Odontologia', '81999990000', 'Sim', 'nova.com.br', 'Sim', '@nova', 'nova@exemplo.com', 'https://facebook.com/nova', 'Ana', 'Resumo da clínica.', 'Recife', 'PE', '80', '4.5', '20', 'google_maps', 'https://maps.example/nova', '2026-01-10'],
+            ], format: 'v2');
+
+            $this->post(route('leads.import.preview'), ['file' => $file]);
+            $response = $this->post(route('leads.import.store'));
+
+            $response->assertRedirect(route('leads.index'));
+
+            $lead = Lead::firstWhere('company_name', 'Clínica Nova');
+
+            expect($lead)->not->toBeNull();
+            expect($lead->category)->toBe('Odontologia');
+            expect($lead->email)->toBe('nova@exemplo.com');
+            expect($lead->facebook)->toBe('https://facebook.com/nova');
+            expect($lead->responsible)->toBe('Ana');
+            expect($lead->summary)->toBe('Resumo da clínica.');
+            expect($lead->likely_whatsapp)->toBeTrue();
+            expect($lead->type)->toBeNull();
+        });
+
+        test('has_instagram is derived from the instagram field when the v2 layout has no explicit column', function () {
+            $withInstagram = fakeLeadsSpreadsheet([
+                ['Com Instagram', 'Restaurante', '81999992222', 'Não', '', 'Não', '@cominsta', '', '', '', '', 'Recife', 'PE', '50', '', '', 'google_maps', '', ''],
+            ], format: 'v2');
+            $this->post(route('leads.import.preview'), ['file' => $withInstagram]);
+            $this->post(route('leads.import.store'));
+
+            expect(Lead::firstWhere('company_name', 'Com Instagram')?->has_instagram)->toBeTrue();
+
+            $withoutInstagram = fakeLeadsSpreadsheet([
+                ['Sem Instagram', 'Restaurante', '81999993333', 'Não', '', 'Não', '', '', '', '', '', 'Recife', 'PE', '50', '', '', 'google_maps', '', ''],
+            ], format: 'v2');
+            $this->post(route('leads.import.preview'), ['file' => $withoutInstagram]);
+            $this->post(route('leads.import.store'));
+
+            expect(Lead::firstWhere('company_name', 'Sem Instagram')?->has_instagram)->toBeFalse();
+        });
+
+        test('a spreadsheet matching neither the legacy nor the v2 layout reports a clear error', function () {
+            $path = tempnam(sys_get_temp_dir(), 'bad_import_').'.csv';
+            file_put_contents($path, "Nome,Telefone\nEmpresa,81999990000");
+            $file = new UploadedFile($path, 'bad.csv', 'text/csv', null, true);
+
+            $response = $this->post(route('leads.import.preview'), ['file' => $file]);
+
+            $response->assertSessionHasErrors('file');
+        });
     });
 });
