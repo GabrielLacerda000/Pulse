@@ -137,6 +137,7 @@ function handleLeadDropped(newStatus: LeadStatus, event: SortableEvent): void {
             v-model:status="filters.status"
             v-model:category="filters.category"
             v-model:city="filters.city"
+            v-model:phone="filters.phone"
             :filter-options="filterOptions"
         />
 

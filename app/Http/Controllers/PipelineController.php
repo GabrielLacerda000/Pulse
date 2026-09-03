@@ -16,7 +16,7 @@ class PipelineController extends Controller
      */
     public function index(Request $request, RenderMessageTemplateAction $action): Response
     {
-        $filters = $request->only(['search', 'status', 'category', 'city']);
+        $filters = $request->only(['search', 'status', 'category', 'city', 'phone']);
         $templates = MessageTemplate::all();
 
         return Inertia::render('pipeline/Index', [
@@ -25,6 +25,7 @@ class PipelineController extends Controller
                 ->filterStatus($filters['status'] ?? null)
                 ->filterCategory($filters['category'] ?? null)
                 ->filterCity($filters['city'] ?? null)
+                ->filterPhone($filters['phone'] ?? null)
                 ->latest()
                 ->get()
                 ->each(fn (Lead $lead) => $lead->setAttribute('message_templates', $action->executeAllFor($lead, $templates))),

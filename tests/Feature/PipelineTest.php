@@ -74,6 +74,18 @@ describe('as an authenticated user', function () {
         );
     });
 
+    test('pipeline index can be filtered by phone regardless of formatting', function () {
+        Lead::factory()->create(['company_name' => 'Clínica Sorriso', 'phone' => '(81) 99999-1234']);
+        Lead::factory()->create(['company_name' => 'Restaurante Sabor', 'phone' => '5511988887777']);
+
+        $response = $this->get(route('pipeline.index', ['phone' => '999991234']));
+
+        $response->assertInertia(fn ($page) => $page
+            ->has('leads', 1)
+            ->where('leads.0.company_name', 'Clínica Sorriso')
+        );
+    });
+
     test('pipeline index can be filtered by status', function () {
         Lead::factory()->create(['status' => LeadStatus::NEW]);
         Lead::factory()->create(['status' => LeadStatus::WON]);
