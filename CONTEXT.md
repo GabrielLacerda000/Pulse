@@ -5,7 +5,7 @@ A CRM for tracking prospects and moving them through a sales pipeline, with What
 ## Language
 
 **Lead**:
-A prospect tracked by the CRM — a company or contact with a status in the sales pipeline (`new`, `contacted`, `conversation`, `meeting`, `proposal`, `won`, `lost`). Currently has no owner (`user_id`); ownership will be added later, outside this context's current scope.
+A prospect tracked by the CRM — a company or contact with a status in the sales pipeline (`new`, `contacted`, `conversation`, `meeting`, `proposal`, `won`, `lost`). Belongs to exactly one User (`user_id`), same ownership model as MessageTemplate and Campaign.
 _Avoid_: Contact, prospect, deal
 
 **MessageTemplate**:
