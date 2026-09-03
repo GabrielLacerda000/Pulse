@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
-import { Eye, Pencil, Plus, Upload } from '@lucide/vue';
+import { Eye, Globe, Pencil, Plus, Upload } from '@lucide/vue';
 import { ref } from 'vue';
 import Heading from '@/components/Heading.vue';
 import LeadDeleteDialog from '@/components/leads/LeadDeleteDialog.vue';
@@ -132,6 +132,9 @@ defineOptions({
                         <th class="px-4 py-3 font-semibold">Categoria</th>
                         <th class="px-4 py-3 font-semibold">Telefone</th>
                         <th class="px-4 py-3 font-semibold">Cidade</th>
+                        <th class="w-10 px-4 py-3 text-center font-semibold">
+                            Site
+                        </th>
                         <th class="px-4 py-3 font-semibold">
                             <LeadSortableHeader
                                 column="score"
@@ -160,7 +163,7 @@ defineOptions({
                         class="border-b border-border/60"
                     >
                         <td
-                            colspan="9"
+                            colspan="10"
                             class="px-4 py-8 text-center text-muted-foreground"
                         >
                             Nenhum lead encontrado.
@@ -195,6 +198,29 @@ defineOptions({
                         </td>
                         <td class="px-4 py-3 text-muted-foreground">
                             {{ lead.city ?? '—' }}
+                        </td>
+                        <td class="px-4 py-3 text-center">
+                            <a
+                                v-if="lead.website"
+                                :href="lead.website"
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                title="Tem site — abrir"
+                                class="inline-flex text-green-700 hover:text-green-800 dark:text-green-400 dark:hover:text-green-300"
+                            >
+                                <Globe class="size-4" />
+                            </a>
+                            <Globe
+                                v-else-if="lead.has_website"
+                                class="inline size-4 text-green-700 dark:text-green-400"
+                                title="Tem site"
+                            />
+                            <span
+                                v-else
+                                class="text-muted-foreground/50"
+                                title="Sem site"
+                                >—</span
+                            >
                         </td>
                         <td class="px-4 py-3 text-muted-foreground">
                             {{ lead.score ?? '—' }}

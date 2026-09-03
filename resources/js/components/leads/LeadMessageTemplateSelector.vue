@@ -65,7 +65,11 @@ const templateUrls = computed(() => {
             <Button
                 :variant="iconOnly ? 'ghost' : 'outline'"
                 :size="iconOnly ? 'icon-sm' : undefined"
-                :class="iconOnly ? undefined : 'rounded-full'"
+                :class="
+                    iconOnly
+                        ? 'text-green-700 hover:bg-green-100 hover:text-green-800 dark:text-green-400 dark:hover:bg-green-950 dark:hover:text-green-300'
+                        : 'rounded-full border-2 border-green-400 bg-green-700 text-white hover:bg-green-800 dark:border-green-500 dark:bg-green-800 dark:hover:bg-green-700'
+                "
                 :disabled="!whatsappPhone"
                 :title="
                     whatsappPhone
