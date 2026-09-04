@@ -226,14 +226,17 @@ test('a claim that affects zero rows logs campaign.recipient.claim_missed and se
     );
 });
 
-test('a job that fails outright logs campaign.job_failed with the exception and marks the campaign failed', function () {
+test('a job that fails outright marks its own recipient failed, logs the exception, and finalizes the campaign when nothing else is pending', function () {
     $campaign = Campaign::factory()->create(['status' => CampaignStatus::RUNNING]);
-    $recipient = CampaignRecipient::factory()->create(['campaign_id' => $campaign->id]);
+    $recipient = CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::PROCESSING]);
     $exception = new RuntimeException('boom');
 
     (new SendCampaignRecipientJob($recipient))->failed($exception);
 
+    expect($recipient->fresh()->status)->toBe(CampaignRecipientStatus::FAILED);
+    expect($recipient->fresh()->error_code)->toBe(PulseWppErrorCode::INTERNAL_ERROR);
     expect($campaign->fresh()->status)->toBe(CampaignStatus::FAILED);
+    expect($campaign->fresh()->completed_at)->not->toBeNull();
     $this->channel->shouldHaveReceived('error')->once()->withArgs(
         fn (string $event, array $context) => $event === 'campaign.job_failed'
             && $context['campaign_id'] === $campaign->id
@@ -241,4 +244,63 @@ test('a job that fails outright logs campaign.job_failed with the exception and 
             && $context['campaign_recipient_id'] === $recipient->id
             && $context['exception'] === $exception
     );
+});
+
+test('a job that fails outright continues the chain when another recipient is still pending', function () {
+    Queue::fake();
+
+    $campaign = Campaign::factory()->create(['status' => CampaignStatus::RUNNING]);
+    $recipientOne = CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::PROCESSING]);
+    $recipientTwo = CampaignRecipient::factory()->create(['campaign_id' => $campaign->id]);
+
+    (new SendCampaignRecipientJob($recipientOne))->failed(new RuntimeException('boom'));
+
+    expect($recipientOne->fresh()->status)->toBe(CampaignRecipientStatus::FAILED);
+    expect($campaign->fresh()->status)->toBe(CampaignStatus::RUNNING);
+    Queue::assertPushed(SendCampaignRecipientJob::class, fn ($job) => $job->recipient->is($recipientTwo));
+});
+
+test('a job that fails outright on an already-resolved recipient updates nothing and does not finalize the campaign again', function () {
+    Queue::fake();
+
+    $campaign = Campaign::factory()->create(['status' => CampaignStatus::RUNNING]);
+    $recipient = CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::SENT]);
+
+    (new SendCampaignRecipientJob($recipient))->failed(new RuntimeException('boom'));
+
+    expect($recipient->fresh()->status)->toBe(CampaignRecipientStatus::SENT);
+    expect($campaign->fresh()->status)->toBe(CampaignStatus::RUNNING);
+    Queue::assertNothingPushed();
+});
+
+test('when some recipients failed and at least one sent, the campaign finalizes to partial', function () {
+    Http::fake(['pulse-wpp.test/messages' => Http::response(['success' => true, 'messageId' => 'abc'])]);
+
+    $campaign = Campaign::factory()->create(['status' => CampaignStatus::RUNNING]);
+    CampaignMessage::factory()->create(['campaign_id' => $campaign->id]);
+    CampaignRecipient::factory()->create(['campaign_id' => $campaign->id, 'status' => CampaignRecipientStatus::FAILED]);
+    $lastRecipient = CampaignRecipient::factory()->create(['campaign_id' => $campaign->id]);
+
+    (new SendCampaignRecipientJob($lastRecipient))->handle(app(PulseWppClient::class), app(RenderMessageTemplateAction::class));
+
+    $fresh = $campaign->fresh();
+    expect($fresh->status)->toBe(CampaignStatus::PARTIAL);
+    expect($fresh->completed_at)->not->toBeNull();
+});
+
+test('when every recipient ends up failed, the campaign finalizes to failed with completed_at set', function () {
+    Http::fake(['pulse-wpp.test/messages' => Http::response([
+        'success' => false,
+        'error' => ['code' => 'INTERNAL_ERROR', 'message' => 'error: INTERNAL_ERROR'],
+    ], 500)]);
+
+    $campaign = Campaign::factory()->create(['status' => CampaignStatus::RUNNING]);
+    CampaignMessage::factory()->create(['campaign_id' => $campaign->id]);
+    $recipient = CampaignRecipient::factory()->create(['campaign_id' => $campaign->id]);
+
+    (new SendCampaignRecipientJob($recipient))->handle(app(PulseWppClient::class), app(RenderMessageTemplateAction::class));
+
+    $fresh = $campaign->fresh();
+    expect($fresh->status)->toBe(CampaignStatus::FAILED);
+    expect($fresh->completed_at)->not->toBeNull();
 });

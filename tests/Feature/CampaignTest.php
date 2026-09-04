@@ -563,6 +563,15 @@ describe('as an authenticated user', function () {
             ->assertInertia(fn ($page) => $page->where('campaign.can_retry_failed', false));
     });
 
+    test('a partially successful campaign show page also exposes whether it can be retried', function () {
+        $partial = Campaign::factory()->create(['status' => CampaignStatus::PARTIAL]);
+        CampaignRecipient::factory()->create(['campaign_id' => $partial->id, 'status' => CampaignRecipientStatus::SENT]);
+        CampaignRecipient::factory()->create(['campaign_id' => $partial->id, 'status' => CampaignRecipientStatus::FAILED]);
+
+        $this->get(route('campaigns.show', $partial))
+            ->assertInertia(fn ($page) => $page->where('campaign.can_retry_failed', true));
+    });
+
     test('the show page exposes started_at and completed_at', function () {
         $campaign = Campaign::factory()->create([
             'status' => CampaignStatus::COMPLETED,

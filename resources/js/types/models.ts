@@ -84,7 +84,12 @@ export type RenderedMessageTemplate = {
     renderedContent: string;
 };
 
-export type CampaignStatus = 'draft' | 'running' | 'completed' | 'failed';
+export type CampaignStatus =
+    | 'draft'
+    | 'running'
+    | 'completed'
+    | 'partial'
+    | 'failed';
 
 export type CampaignRecipientStatus =
     'pending' | 'processing' | 'sent' | 'failed';

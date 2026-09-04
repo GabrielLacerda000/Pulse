@@ -12,7 +12,11 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useCampaignRecipientFilters } from '@/composables/useCampaignRecipientFilters';
 import { usePhoneMask } from '@/composables/usePhoneMask';
-import { CAMPAIGN_STATUS_LABELS } from '@/constants/campaignStatus';
+import {
+    CAMPAIGN_STATUS_CLASSES,
+    CAMPAIGN_STATUS_LABELS,
+    CAMPAIGN_STATUS_VARIANTS,
+} from '@/constants/campaignStatus';
 import { PULSE_WPP_ERROR_CODE_LABELS } from '@/constants/pulseWppErrorCode';
 import { dashboard } from '@/routes';
 import { create, index, show } from '@/routes/campaigns';
@@ -139,9 +143,8 @@ function handleProgressUpdate(data: CampaignProgress) {
             />
             <div class="flex flex-col items-end gap-1">
                 <Badge
-                    :variant="
-                        currentStatus === 'failed' ? 'destructive' : 'secondary'
-                    "
+                    :variant="CAMPAIGN_STATUS_VARIANTS[currentStatus]"
+                    :class="CAMPAIGN_STATUS_CLASSES[currentStatus]"
                 >
                     {{ CAMPAIGN_STATUS_LABELS[currentStatus] }}
                 </Badge>

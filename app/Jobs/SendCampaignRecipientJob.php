@@ -36,10 +36,19 @@ use Throwable;
  * recipient failed with that error code and leaves the campaign FAILED,
  * without setting completed_at.
  *
+ * If the job itself times out or throws unhandled (tries is 1, so this is
+ * terminal), Laravel's failed() callback resolves the stuck recipient
+ * (still processing) to failed with an INTERNAL_ERROR code and continues
+ * the chain, rather than leaving it stranded and killing the whole run.
+ *
  * When there's more work to do, the job dispatches the next pending
  * recipient's job with a random delay instead of sleeping in-process, so no
  * single job instance ever runs long enough to be reclaimed by the queue
  * as "stuck".
+ *
+ * Once every recipient has a final outcome, the campaign's own status is
+ * derived from the sent/failed counts (see Campaign::terminalStatusFor):
+ * all sent is COMPLETED, all failed is FAILED, a mix is PARTIAL.
  *
  * Recording a recipient's outcome is retried on transient SQLite "database
  * is locked" errors (see docs/adr/0004-retry-sqlite-lock-errors-in-send-campaign-job.md):
@@ -164,9 +173,15 @@ final class SendCampaignRecipientJob implements ShouldQueue
             ->first();
 
         if ($next === null) {
-            $campaign->update(['status' => CampaignStatus::COMPLETED, 'completed_at' => now()]);
+            $counts = $campaign->progressCounts();
+            $status = Campaign::terminalStatusFor($counts['sent'], $counts['failed']);
 
-            $this->logEvent('campaign.completed', $this->campaignLogContext($campaign));
+            $campaign->update(['status' => $status, 'completed_at' => now()]);
+
+            $this->logEvent(
+                $status === CampaignStatus::FAILED ? 'campaign.failed' : 'campaign.completed',
+                [...$this->campaignLogContext($campaign), 'final_status' => $status->value],
+            );
 
             return;
         }
@@ -187,7 +202,16 @@ final class SendCampaignRecipientJob implements ShouldQueue
             'exception' => $exception,
         ], 'error');
 
-        $this->recipient->campaign->update(['status' => CampaignStatus::FAILED]);
+        $updated = CampaignRecipient::query()
+            ->whereKey($this->recipient->id)
+            ->where('status', CampaignRecipientStatus::PROCESSING)
+            ->update(['status' => CampaignRecipientStatus::FAILED, 'error_code' => PulseWppErrorCode::INTERNAL_ERROR]);
+
+        if ($updated === 0) {
+            return;
+        }
+
+        $this->dispatchNextOrFinalize($this->recipient->campaign);
     }
 
     /**

@@ -7,38 +7,21 @@ import CampaignStartDialog from '@/components/campaigns/CampaignStartDialog.vue'
 import Heading from '@/components/Heading.vue';
 import LeadsPagination from '@/components/LeadsPagination.vue';
 import { Badge } from '@/components/ui/badge';
-import type { BadgeVariants } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { useCampaignFilters } from '@/composables/useCampaignFilters';
-import { CAMPAIGN_STATUS_LABELS } from '@/constants/campaignStatus';
+import {
+    CAMPAIGN_STATUS_CLASSES,
+    CAMPAIGN_STATUS_LABELS,
+    CAMPAIGN_STATUS_VARIANTS,
+} from '@/constants/campaignStatus';
 import { dashboard } from '@/routes';
 import { create, edit, index, show } from '@/routes/campaigns';
-import type {
-    Campaign,
-    CampaignFilters,
-    CampaignStatus,
-    Paginated,
-} from '@/types';
+import type { Campaign, CampaignFilters, Paginated } from '@/types';
 
 const props = defineProps<{
     campaigns: Paginated<Campaign>;
     filters: CampaignFilters;
 }>();
-
-const CAMPAIGN_STATUS_VARIANTS: Record<
-    CampaignStatus,
-    NonNullable<BadgeVariants['variant']>
-> = {
-    draft: 'secondary',
-    running: 'outline',
-    completed: 'default',
-    failed: 'destructive',
-};
-
-const CAMPAIGN_STATUS_CLASSES: Partial<Record<CampaignStatus, string>> = {
-    completed:
-        'border-transparent bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-400',
-};
 
 defineOptions({
     layout: {

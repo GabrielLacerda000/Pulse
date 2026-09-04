@@ -162,13 +162,32 @@ class Campaign extends Model
     }
 
     /**
-     * A completed campaign with at least one failed recipient can be
-     * retried: the user is offered a shortcut into a brand new campaign
-     * pre-filled with just those failed recipients' Leads.
+     * The terminal CampaignStatus implied by a given sent/failed recipient
+     * count pair, once there are no more pending or processing recipients:
+     * all sent gives COMPLETED, all failed gives FAILED, a mix of both gives
+     * PARTIAL.
+     */
+    public static function terminalStatusFor(int $sent, int $failed): CampaignStatus
+    {
+        if ($failed === 0) {
+            return CampaignStatus::COMPLETED;
+        }
+
+        if ($sent === 0) {
+            return CampaignStatus::FAILED;
+        }
+
+        return CampaignStatus::PARTIAL;
+    }
+
+    /**
+     * A completed or partially successful campaign with at least one failed
+     * recipient can be retried: the user is offered a shortcut into a brand
+     * new campaign pre-filled with just those failed recipients' Leads.
      */
     public function canRetryFailed(): bool
     {
-        return $this->status === CampaignStatus::COMPLETED
+        return in_array($this->status, [CampaignStatus::COMPLETED, CampaignStatus::PARTIAL], true)
             && $this->recipients()->where('status', CampaignRecipientStatus::FAILED)->exists();
     }
 
