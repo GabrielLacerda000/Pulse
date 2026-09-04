@@ -2,6 +2,7 @@
 import { Form, Head, Link } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import CampaignFormFields from '@/components/campaigns/CampaignFormFields.vue';
+import CampaignSelectedLeadsPanel from '@/components/campaigns/CampaignSelectedLeadsPanel.vue';
 import Heading from '@/components/Heading.vue';
 import { Button } from '@/components/ui/button';
 import { dashboard } from '@/routes';
@@ -37,7 +38,7 @@ const messages = ref<string[]>([...props.campaign.messages]);
 <template>
     <Head :title="`Editar ${campaign.name}`" />
 
-    <div class="mx-auto flex w-full max-w-2xl flex-col gap-6 p-6">
+    <div class="mx-auto flex w-full max-w-6xl flex-col gap-6 p-6">
         <Heading
             title="Editar campanha"
             :description="`Atualize os dados de ${campaign.name}`"
@@ -45,20 +46,28 @@ const messages = ref<string[]>([...props.campaign.messages]);
 
         <Form
             v-bind="update.form(campaign.id)"
-            class="space-y-6"
+            class="flex flex-col gap-6 lg:grid lg:grid-cols-[1fr_320px] lg:items-start lg:gap-6"
             v-slot="{ errors, processing }"
         >
-            <CampaignFormFields
+            <div class="flex flex-col gap-6">
+                <CampaignFormFields
+                    v-model:selected-lead-ids="selectedLeadIds"
+                    v-model:messages="messages"
+                    :campaign="campaign"
+                    :leads="leads"
+                    :filter-options="filterOptions"
+                    :message-templates="messageTemplates"
+                    :errors="errors"
+                />
+            </div>
+
+            <CampaignSelectedLeadsPanel
                 v-model:selected-lead-ids="selectedLeadIds"
-                v-model:messages="messages"
-                :campaign="campaign"
                 :leads="leads"
-                :filter-options="filterOptions"
-                :message-templates="messageTemplates"
-                :errors="errors"
+                class="lg:sticky lg:top-6"
             />
 
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-3 lg:col-span-2">
                 <Button
                     type="submit"
                     :disabled="processing || selectedLeadIds.length === 0"
