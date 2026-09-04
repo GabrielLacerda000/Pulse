@@ -182,7 +182,7 @@ function handleProgressUpdate(data: CampaignProgress) {
                         </p>
                     </div>
                     <div
-                        class="rounded-xl border border-border p-4 text-center"
+                        class="rounded-xl border border-emerald-500/40 bg-emerald-500/10 p-4 text-center"
                     >
                         <p class="text-2xl font-semibold text-foreground">
                             {{ liveProgress.sent }}
@@ -190,7 +190,7 @@ function handleProgressUpdate(data: CampaignProgress) {
                         <p class="text-xs text-muted-foreground">Enviadas</p>
                     </div>
                     <div
-                        class="rounded-xl border border-border p-4 text-center"
+                        class="rounded-xl border border-destructive/40 bg-destructive/10 p-4 text-center"
                     >
                         <p class="text-2xl font-semibold text-foreground">
                             {{ liveProgress.failed }}
@@ -198,7 +198,7 @@ function handleProgressUpdate(data: CampaignProgress) {
                         <p class="text-xs text-muted-foreground">Falharam</p>
                     </div>
                     <div
-                        class="rounded-xl border border-border p-4 text-center"
+                        class="rounded-xl border border-blue-500/40 bg-blue-500/10 p-4 text-center"
                     >
                         <p class="text-2xl font-semibold text-foreground">
                             {{ successRate }}%
