@@ -86,14 +86,14 @@ const location = computed(() => {
             </div>
             <div
                 v-if="lead.website"
-                class="flex items-center gap-2 text-foreground"
+                class="flex min-w-0 items-center gap-2 text-foreground"
             >
-                <Globe class="size-4 text-muted-foreground" />
+                <Globe class="size-4 shrink-0 text-muted-foreground" />
                 <a
                     :href="lead.website"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="truncate text-primary underline-offset-4 hover:underline"
+                    class="min-w-0 truncate text-primary underline-offset-4 hover:underline"
                 >
                     {{ lead.website }}
                 </a>
@@ -107,14 +107,14 @@ const location = computed(() => {
             </div>
             <div
                 v-if="lead.facebook"
-                class="flex items-center gap-2 text-foreground"
+                class="flex min-w-0 items-center gap-2 text-foreground"
             >
-                <LinkIcon class="size-4 text-muted-foreground" />
+                <LinkIcon class="size-4 shrink-0 text-muted-foreground" />
                 <a
                     :href="lead.facebook"
                     target="_blank"
                     rel="noopener noreferrer"
-                    class="truncate text-primary underline-offset-4 hover:underline"
+                    class="min-w-0 truncate text-primary underline-offset-4 hover:underline"
                 >
                     {{ lead.facebook }}
                 </a>
