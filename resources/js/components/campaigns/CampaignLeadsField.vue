@@ -3,6 +3,7 @@ import { computed } from 'vue';
 import InputError from '@/components/InputError.vue';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Label } from '@/components/ui/label';
+import { usePhoneMask } from '@/composables/usePhoneMask';
 import type { Lead } from '@/types';
 
 const props = defineProps<{
@@ -11,6 +12,8 @@ const props = defineProps<{
 }>();
 
 const selected = defineModel<number[]>({ default: () => [] });
+
+const { formatPhoneDisplay } = usePhoneMask();
 
 const allSelected = computed(
     () =>
@@ -61,7 +64,7 @@ function toggleAll(checked: boolean) {
                 />
                 <span class="font-medium">{{ lead.company_name }}</span>
                 <span class="text-muted-foreground">{{
-                    lead.whatsapp_phone
+                    formatPhoneDisplay(lead.whatsapp_phone)
                 }}</span>
             </label>
         </div>
