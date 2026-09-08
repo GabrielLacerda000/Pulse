@@ -103,7 +103,14 @@ const location = computed(() => {
                 class="flex items-center gap-2 text-foreground"
             >
                 <AtSign class="size-4 text-muted-foreground" />
-                {{ lead.instagram }}
+                <a
+                    :href="lead.instagram"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="min-w-0 truncate text-primary underline-offset-4 hover:underline"
+                >
+                    {{ lead.instagram }}
+                </a>
             </div>
             <div
                 v-if="lead.facebook"
