@@ -20,6 +20,7 @@ import { Button } from '@/components/ui/button';
 import { dashboard } from '@/routes';
 import { edit as editLead, index } from '@/routes/leads';
 import type { Lead, RenderedMessageTemplate } from '@/types';
+import { usePhoneMask } from '@/composables/usePhoneMask';
 
 const props = defineProps<{
     lead: Lead;
@@ -42,6 +43,9 @@ const location = computed(() => {
 
     return props.lead.city ?? props.lead.state ?? null;
 });
+
+const { formatPhoneDisplay } = usePhoneMask();
+
 </script>
 
 <template>
@@ -75,7 +79,7 @@ const location = computed(() => {
                 class="flex items-center gap-2 text-foreground"
             >
                 <Phone class="size-4 text-muted-foreground" />
-                {{ lead.phone }}
+                {{ formatPhoneDisplay(lead.phone) }}
             </div>
             <div
                 v-if="lead.email"
